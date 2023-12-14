@@ -21,7 +21,7 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    open: true,
+    open: false,
     overlay: {
       warnings: false,
       errors: true
@@ -39,6 +39,13 @@ module.exports = {
         changeOrigin: true,
         pathRewrite: {
           '^/auth': 'auth'
+        }
+      },
+      '/ljadmin': {
+        target: process.env.VUE_ADMIN_BASE_API,
+        changeOrigin: true,
+        pathRewrite: {
+          '^/ljadmin': '/api'
         }
       }
     }
