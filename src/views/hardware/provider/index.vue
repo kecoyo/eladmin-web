@@ -4,7 +4,8 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.blurry" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-cascader v-model="query.area" :options="allAreas" :props="areaProps" clearable placeholder="选择区域" style="width: 300px" class="filter-item" @change="crud.toQuery" />
+        <el-input v-model="query.name" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission" />
@@ -16,7 +17,7 @@
           <el-input v-model="form.name" style="width: 370px" />
         </el-form-item>
         <el-form-item label="所属区域" prop="area">
-          <el-cascader v-model="form.area" :options="options" style="width: 370px" />
+          <el-cascader v-model="form.area" :options="allAreas" :props="areaProps" style="width: 370px" />
         </el-form-item>
         <el-form-item label="联系人" prop="liaison">
           <el-input v-model="form.liaison" style="width: 370px" />
@@ -58,18 +59,7 @@ import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import DeviceListEdit from './DeviceListEdit'
 
-const deviceTypeOptions = [{ id: 1, name: '智慧班牌' }, { id: 2, name: '出入终端' }, { id: 3, name: '宿舍终端' }, { id: 4, name: '电子大屏' }, { id: 5, name: '智慧黑板' }]
-const defaultForm = {
-  id: null,
-  name: null,
-  province: null,
-  city: null,
-  county: null,
-  area: null,
-  liaison: null,
-  phone: null,
-  devices: [{ deviceType: deviceTypeOptions[0].id, deviceMode: '' }]
-}
+const defaultForm = { id: null, name: null, province: null, city: null, county: null, area: null, liaison: null, phone: null, devices: null }
 export default {
   name: 'Provider',
   components: { crudOperation, rrOperation, udOperation, DeviceListEdit },
@@ -79,8 +69,7 @@ export default {
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      accountList: [],
-      accountMap: {},
+      areaProps: { value: 'id', label: 'name', children: 'children' },
       loading: false,
       permission: {
         add: ['admin', 'provider:add'],
@@ -96,7 +85,6 @@ export default {
           { required: true, message: '请添加设备信息', trigger: 'blur' },
           {
             validator: (rule, value, callback) => {
-              console.log('🚀 ~ file: index.vue:107 ~ data ~ rule, value:', rule, value)
               // 不能为空
               if (value.filter(val => val.deviceMode === '').length > 0) {
                 callback(new Error('设备型号不能为空'))
@@ -114,57 +102,26 @@ export default {
             trigger: 'change'
           }
         ]
-      },
-      options: [
-        {
-          value: 130000,
-          label: '河北省',
-          children: [
-            {
-              value: 130100,
-              label: '石家庄市',
-              children: [
-                {
-                  value: 130102,
-                  label: '长安区'
-                },
-                {
-                  value: 130104,
-                  label: '桥西区'
-                },
-                {
-                  value: 130105,
-                  label: '新华区'
-                },
-                {
-                  value: 130107,
-                  label: '井陉矿区'
-                }
-              ]
-            },
-            {
-              value: 130200,
-              label: '唐山市',
-              children: [
-                {
-                  value: 130202,
-                  label: '路南区'
-                },
-                {
-                  value: 130203,
-                  label: '路北区'
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      }
+    }
+  },
+  computed: {
+    allAreas() {
+      return this.$store.state.baseInfo.allAreas
+    },
+    allDeviceTypes() {
+      return this.$store.state.baseInfo.allDeviceTypes
     }
   },
   created() {
     this.crud.optShow.download = false
   },
   methods: {
+    [CRUD.HOOK.beforeRefresh](curd) {
+      console.log('🚀 ~ file: index.vue:149 ~ query:', curd)
+      this.selectIndex = ''
+      return true
+    },
     // 新增编辑前做的操作
     [CRUD.HOOK.beforeToCU](crud, form) {
       const area = []
@@ -172,6 +129,11 @@ export default {
       if (form.city) area.push(form.city)
       if (form.county) area.push(form.county)
       this.form.area = area
+
+      // 设备信息为空时，添加一条
+      if (!form.devices || form.devices.length === 0) {
+        this.form.devices = [{ deviceType: this.allDeviceTypes[0].id, deviceMode: '' }]
+      }
     },
     // 提交前
     [CRUD.HOOK.beforeSubmit]() {

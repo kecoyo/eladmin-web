@@ -3,7 +3,7 @@
     <el-row v-for="(item, index) in value" :key="index" :gutter="10">
       <el-col :span="10">
         <el-select v-model="item.deviceType" placeholder="请选择活动区域">
-          <el-option v-for="opt in options" :key="opt.id" :label="opt.name" :value="opt.id" />
+          <el-option v-for="opt in allDeviceTypes" :key="opt.id" :label="opt.name" :value="opt.id" />
         </el-select>
       </el-col>
       <el-col :span="10">
@@ -27,19 +27,16 @@ export default {
     }
   },
   data() {
-    return {
-      options: [
-        { id: 1, name: '智慧班牌' }, //
-        { id: 2, name: '出入终端' },
-        { id: 3, name: '宿舍终端' },
-        { id: 4, name: '电子大屏' },
-        { id: 5, name: '智慧黑板' }
-      ]
+    return {}
+  },
+  computed: {
+    allDeviceTypes() {
+      return this.$store.state.baseInfo.allDeviceTypes
     }
   },
   methods: {
     addItem() {
-      this.value.push({ deviceType: this.options[0].id, deviceMode: '' })
+      this.value.push({ deviceType: this.allDeviceTypes[0].id, deviceMode: '' })
       this.handleChange()
     },
     delItem(item, index) {

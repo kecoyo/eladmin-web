@@ -4,6 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
+        <el-cascader v-model="query.area" :options="allAreas" :props="areaProps" clearable placeholder="选择区域" style="width: 300px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.name" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
@@ -16,7 +17,7 @@
           <el-input v-model="form.name" style="width: 370px" />
         </el-form-item>
         <el-form-item label="所属区域" prop="area">
-          <el-cascader v-model="form.area" :options="options" style="width: 370px" />
+          <el-cascader v-model="form.area" :options="allAreas" :props="areaProps" style="width: 370px" />
         </el-form-item>
         <el-form-item label="联系人" prop="liaison">
           <el-input v-model="form.liaison" style="width: 370px" />
@@ -63,8 +64,7 @@ export default {
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      accountList: [],
-      accountMap: {},
+      areaProps: { value: 'id', label: 'name', children: 'children' },
       loading: false,
       permission: {
         add: ['admin', 'vendor:add'],
@@ -76,51 +76,12 @@ export default {
         area: [{ required: true, message: '请选择所属区域', trigger: 'blur' }],
         liaison: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
-      },
-      options: [
-        {
-          value: 130000,
-          label: '河北省',
-          children: [
-            {
-              value: 130100,
-              label: '石家庄市',
-              children: [
-                {
-                  value: 130102,
-                  label: '长安区'
-                },
-                {
-                  value: 130104,
-                  label: '桥西区'
-                },
-                {
-                  value: 130105,
-                  label: '新华区'
-                },
-                {
-                  value: 130107,
-                  label: '井陉矿区'
-                }
-              ]
-            },
-            {
-              value: 130200,
-              label: '唐山市',
-              children: [
-                {
-                  value: 130202,
-                  label: '路南区'
-                },
-                {
-                  value: 130203,
-                  label: '路北区'
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      }
+    }
+  },
+  computed: {
+    allAreas() {
+      return this.$store.state.baseInfo.allAreas
     }
   },
   created() {
