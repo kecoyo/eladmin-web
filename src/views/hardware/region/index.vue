@@ -4,8 +4,9 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-cascader v-model="query.area" :options="allAreas" :props="areaProps" clearable placeholder="选择区域" style="width: 300px" class="filter-item" @change="crud.toQuery" />
-        <el-input v-model="query.name" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <user-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <el-input v-model="query.schoolId" clearable placeholder="输入学校ID" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.schoolName" clearable placeholder="输入学校名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission" />
@@ -26,12 +27,22 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="id" label="学校ID" />
+      <el-table-column prop="id" label="学校ID" width="90" />
       <el-table-column prop="name" label="学校名称" />
-      <el-table-column prop="province" label="所属区域" />
-      <el-table-column prop="property" label="学校属性" />
+      <el-table-column label="所属区域">
+        <template slot-scope="scope">
+          <span v-if="allAreasMap.getFullNames">
+            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column prop="mode" label="学校类型" />
-      <el-table-column prop="expectCard" label="班牌数量" />
+      <el-table-column label="班牌数量">
+        <template slot-scope="scope">
+          <span v-if="scope.row.realityCard > 0 || scope.row.expectCard > 0">{{ scope.row.realityCard }} / {{ scope.row.expectCard }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column v-if="checkPer(['admin', 'schoolCard:edit', 'schoolCard:del'])" label="操作" width="150px" align="center">
         <template slot-scope="scope">
           <udOperation :data="scope.row" :permission="permission" />
@@ -50,19 +61,20 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
+import UserAreaSelect from '@/components/UserAreaSelect'
 
 const defaultForm = { schoolId: null, expectCard: null }
 export default {
   name: 'SchoolCard',
-  components: { pagination, crudOperation, rrOperation, udOperation },
+  components: { pagination, crudOperation, rrOperation, udOperation, UserAreaSelect },
   cruds() {
     return CRUD({ title: '学校配置', url: 'ljadmin/schoolCard', crudMethod: { ...crudSchoolCard } })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      areaProps: { value: 'id', label: 'name', children: 'children' },
       loading: false,
+      area: [],
       permission: {
         // add: ['admin', 'schoolCard:add'],
         edit: ['admin', 'schoolCard:edit'],
@@ -74,8 +86,8 @@ export default {
     }
   },
   computed: {
-    allAreas() {
-      return this.$store.state.baseInfo.allAreas
+    allAreasMap() {
+      return this.$store.state.baseInfo.allAreasMap
     }
   },
   created() {
@@ -84,12 +96,14 @@ export default {
     this.crud.optShow.del = false
     this.crud.optShow.download = false
   },
-  methods: {}
+  methods: {
+    [CRUD.HOOK.beforeRefresh](curd) {
+      const [province, city, county] = this.area
+      curd.query = { ...curd.query, ...this.query, province, city, county }
+      return true
+    }
+  }
 }
 </script>
 
-<style rel="stylesheet/scss" lang="scss" scoped>
-::v-deep .el-input-number .el-input__inner {
-  text-align: left;
-}
-</style>
+<style rel="stylesheet/scss" lang="scss" scoped></style>

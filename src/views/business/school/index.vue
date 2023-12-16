@@ -1,36 +1,99 @@
 <template>
   <div class="app-container">
-    <el-alert :closable="false" title="三级菜单1" type="success" />
-    <el-form label-width="170px" style="margin-top: 20px">
-      <el-form-item label="三级菜单缓存功能测试区">
-        <el-input v-model="input" placeholder="请输入内容" style="width: 360px;" />
-      </el-form-item>
-    </el-form>
-    <div>
-      <blockquote class="my-blockquote"> 三级菜单缓存配置教程</blockquote>
-      <pre class="my-code">
- 1、将前后端代码更新为最新版版本，或对照提交记录修改,点击查看-> <a href="https://gitee.com/elunez/eladmin/commit/43d1a63577f9d5347924355708429a2d210e29f7" target="_blank">提交(1)</a>、<a href="https://gitee.com/elunez/eladmin/commit/46393875148fcca5eaa327d4073f72edb3752f5c" target="_blank">提交(2)</a>、<a href="https://gitee.com/elunez/eladmin-web/commit/c93c99d8921abbb2c52afc806635f5ca08d6bda8" target="_blank">提交(3)</a>
- 2、将 二级菜单 的 菜单类型 设置为 目录 级别，并且原有的 组件路径 需要清空
- 3、将 三级菜单 的 菜单缓存 设置为 是，最后将 组件名称 填写正确
- 4、具体设置可参考 菜单管理 的 多级菜单 配置进行进行相应的修改
- </pre>
-      <blockquote class="my-blockquote">更多帮助</blockquote>
-      <pre class="my-code">QQ交流群：一群：891137268、二群：947578238、三群：659622532</pre>
+    <!--工具栏-->
+    <div class="head-container">
+      <div v-if="crud.props.searchToggle">
+        <!-- 搜索 -->
+        <user-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <el-input v-model="query.schoolId" clearable placeholder="输入学校ID" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.schoolName" clearable placeholder="输入学校名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <rrOperation />
+      </div>
+      <crudOperation :permission="permission" />
     </div>
+    <!--表单组件-->
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
+      <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
+        <el-input v-model="form.schoolId" type="hidden" />
+        <el-form-item label="预设班牌数量" prop="expectCard">
+          <el-input-number v-model.number="form.expectCard" controls-position="right" style="width: 230px;" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+        <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
+      </div>
+    </el-dialog>
+    <!--表格渲染-->
+    <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
+      <el-table-column type="selection" width="55" />
+      <el-table-column prop="id" label="学校ID" width="90" />
+      <el-table-column prop="name" label="学校名称" />
+      <el-table-column label="所属区域">
+        <template slot-scope="scope">
+          <span v-if="allAreasMap.getFullNames">
+            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="mode" label="学校类型" />
+      <el-table-column v-if="checkPer(['admin', 'schoolCard:edit', 'schoolCard:del'])" label="操作" width="150px" align="center">
+        <template slot-scope="scope">
+          <udOperation :data="scope.row" :permission="permission" />
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--分页组件-->
+    <pagination />
   </div>
 </template>
+
 <script>
+import crudSchoolCard from '@/api/hardware/schoolCard'
+import CRUD, { presenter, header, form, crud } from '@crud/crud'
+import rrOperation from '@crud/RR.operation'
+import crudOperation from '@crud/CRUD.operation'
+import udOperation from '@crud/UD.operation'
+import pagination from '@crud/Pagination'
+import UserAreaSelect from '@/components/UserAreaSelect'
+
+const defaultForm = { schoolId: null, expectCard: null }
 export default {
-  name: 'User',
+  name: 'School',
+  components: { pagination, crudOperation, rrOperation, udOperation, UserAreaSelect },
+  cruds() {
+    return CRUD({ title: '学校', url: 'ljadmin/schoolCard', crudMethod: { ...crudSchoolCard } })
+  },
+  mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      input: ''
+      loading: false,
+      area: [],
+      permission: {
+        add: ['admin', 'schoolCard:add'],
+        edit: ['admin', 'schoolCard:edit'],
+        del: ['admin', 'schoolCard:del']
+      },
+      rules: {
+        expectCard: [{ required: true, message: '请输入预设班牌数量', trigger: 'blur', type: 'number' }]
+      }
+    }
+  },
+  computed: {
+    allAreasMap() {
+      return this.$store.state.baseInfo.allAreasMap
+    }
+  },
+  created() {
+  },
+  methods: {
+    [CRUD.HOOK.beforeRefresh](curd) {
+      const [province, city, county] = this.area
+      curd.query = { ...curd.query, ...this.query, province, city, county }
+      return true
     }
   }
 }
 </script>
-<style scoped>
-  .my-code a{
-    color:#009688;
-  }
-</style>
+
+<style rel="stylesheet/scss" lang="scss" scoped></style>

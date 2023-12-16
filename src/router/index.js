@@ -78,7 +78,7 @@ export const loadMenus = (next, to) => {
 
 export const loadBaseInfo = () => {
   store.dispatch('baseInfo/getAllAreas')
-  store.dispatch('baseInfo/getAllDeviceTypes')
+  store.dispatch('baseInfo/getDeviceTypes')
 }
 
 router.afterEach(() => {

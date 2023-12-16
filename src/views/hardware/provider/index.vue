@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-cascader v-model="query.area" :options="allAreas" :props="areaProps" clearable placeholder="选择区域" style="width: 300px" class="filter-item" @change="crud.toQuery" />
+        <user-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.name" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
@@ -37,8 +37,15 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
+      <el-table-column prop="id" label="厂商ID" width="90" />
       <el-table-column prop="name" label="名称" />
-      <el-table-column prop="province" label="所属区域" />
+      <el-table-column label="所属区域">
+        <template slot-scope="scope">
+          <span v-if="allAreasMap.getFullNames">
+            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
+          </span>
+        </template>
+      </el-table-column>
       <el-table-column prop="liaison" label="联系人" />
       <el-table-column prop="phone" label="手机号" />
       <el-table-column v-if="checkPer(['admin', 'provider:edit', 'provider:del'])" label="操作" width="150px" align="center">
@@ -57,12 +64,13 @@ import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
+import UserAreaSelect from '@/components/UserAreaSelect'
 import DeviceListEdit from './DeviceListEdit'
 
 const defaultForm = { id: null, name: null, province: null, city: null, county: null, area: null, liaison: null, phone: null, devices: null }
 export default {
   name: 'Provider',
-  components: { crudOperation, rrOperation, udOperation, DeviceListEdit },
+  components: { crudOperation, rrOperation, udOperation, UserAreaSelect, DeviceListEdit },
   cruds() {
     return CRUD({ title: '供应商', url: 'ljadmin/provider', crudMethod: { ...crudProvider } })
   },
@@ -71,6 +79,7 @@ export default {
     return {
       areaProps: { value: 'id', label: 'name', children: 'children' },
       loading: false,
+      area: [],
       permission: {
         add: ['admin', 'provider:add'],
         edit: ['admin', 'provider:edit'],
@@ -109,8 +118,11 @@ export default {
     allAreas() {
       return this.$store.state.baseInfo.allAreas
     },
-    allDeviceTypes() {
-      return this.$store.state.baseInfo.allDeviceTypes
+    allAreasMap() {
+      return this.$store.state.baseInfo.allAreasMap
+    },
+    deviceTypes() {
+      return this.$store.state.baseInfo.deviceTypes
     }
   },
   created() {
@@ -118,8 +130,8 @@ export default {
   },
   methods: {
     [CRUD.HOOK.beforeRefresh](curd) {
-      console.log('🚀 ~ file: index.vue:149 ~ query:', curd)
-      this.selectIndex = ''
+      const [province, city, county] = this.area
+      curd.query = { ...curd.query, ...this.query, province, city, county }
       return true
     },
     // 新增编辑前做的操作
@@ -132,7 +144,7 @@ export default {
 
       // 设备信息为空时，添加一条
       if (!form.devices || form.devices.length === 0) {
-        this.form.devices = [{ deviceType: this.allDeviceTypes[0].id, deviceMode: '' }]
+        this.form.devices = [{ deviceType: this.deviceTypes[0].id, deviceMode: '' }]
       }
     },
     // 提交前

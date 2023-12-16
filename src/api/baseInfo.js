@@ -7,7 +7,7 @@ export function getAllAreas() {
   })
 }
 
-export function getAllDeviceTypes() {
+export function getDeviceTypes() {
   return request({
     url: 'ljadmin/device/getAllDeviceType',
     method: 'get'

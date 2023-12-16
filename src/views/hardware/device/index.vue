@@ -69,10 +69,10 @@ import pagination from '@crud/Pagination'
 
 const defaultForm = { id: null, name: null, ip: null, port: 22, account: 'root', password: null }
 export default {
-  name: 'Server',
+  name: 'Device',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
-    return CRUD({ title: '服务器', url: 'api/serverDeploy', crudMethod: { ...crudServer }})
+    return CRUD({ title: '设备', url: 'api/serverDeploy', crudMethod: { ...crudServer }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {

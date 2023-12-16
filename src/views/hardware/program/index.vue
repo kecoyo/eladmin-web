@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.blurry" clearable placeholder="输入名称或IP搜索" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.blurry" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <date-range-picker v-model="query.createTime" class="date-item" />
         <rrOperation />
       </div>
@@ -71,10 +71,10 @@ import DateRangePicker from '@/components/DateRangePicker'
 
 const defaultForm = { id: null, name: null, ip: null, port: 22, account: 'root', password: null }
 export default {
-  name: 'Server',
+  name: 'Program',
   components: { pagination, crudOperation, rrOperation, udOperation, DateRangePicker },
   cruds() {
-    return CRUD({ title: '服务器', url: 'api/serverDeploy', crudMethod: { ...crudServer }})
+    return CRUD({ title: '节目', url: 'api/serverDeploy', crudMethod: { ...crudServer }})
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
