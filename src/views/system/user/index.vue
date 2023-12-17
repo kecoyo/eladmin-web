@@ -125,13 +125,7 @@
               </el-select>
             </el-form-item>
             <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreas">
-              <el-cascader
-                v-model="form.userAreas"
-                :options="allAreas"
-                :props="areaProps"
-                style="width: 467px"
-                placeholder="请选择"
-              />
+              <area-select v-model="form.userAreas" style="width: 467px" />
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -198,6 +192,7 @@ import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
+import AreaSelect from '@/components/AreaSelect/MultiAreaSelect'
 import Treeselect from '@riophae/vue-treeselect'
 import { mapGetters } from 'vuex'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
@@ -207,7 +202,7 @@ const defaultForm = { id: null, username: null, nickName: null, gender: '男', e
   userArea: null, userAreas: null }
 export default {
   name: 'User',
-  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
+  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker, AreaSelect },
   cruds() {
     return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
   },

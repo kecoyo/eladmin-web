@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <user-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.schoolId" clearable placeholder="输入学校ID" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <el-input v-model="query.schoolName" clearable placeholder="输入学校名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
@@ -61,12 +61,12 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
-import UserAreaSelect from '@/components/UserAreaSelect'
+import AreaSelect from '@/components/AreaSelect/SingleAreaSelect'
 
 const defaultForm = { schoolId: null, expectCard: null }
 export default {
   name: 'SchoolCard',
-  components: { pagination, crudOperation, rrOperation, udOperation, UserAreaSelect },
+  components: { pagination, crudOperation, rrOperation, udOperation, AreaSelect },
   cruds() {
     return CRUD({ title: '学校配置', url: 'ljadmin/schoolCard', crudMethod: { ...crudSchoolCard } })
   },

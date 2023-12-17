@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <user-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.name" clearable placeholder="输入名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
@@ -64,13 +64,13 @@ import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
-import UserAreaSelect from '@/components/UserAreaSelect'
+import AreaSelect from '@/components/AreaSelect/SingleAreaSelect'
 import DeviceListEdit from './DeviceListEdit'
 
 const defaultForm = { id: null, name: null, province: null, city: null, county: null, area: null, liaison: null, phone: null, devices: null }
 export default {
   name: 'Provider',
-  components: { crudOperation, rrOperation, udOperation, UserAreaSelect, DeviceListEdit },
+  components: { crudOperation, rrOperation, udOperation, AreaSelect, DeviceListEdit },
   cruds() {
     return CRUD({ title: '供应商', url: 'ljadmin/provider', crudMethod: { ...crudProvider } })
   },

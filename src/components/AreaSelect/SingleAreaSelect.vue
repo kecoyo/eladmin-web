@@ -4,7 +4,7 @@
 
 <script>
 export default {
-  name: 'UserAreaSelect',
+  name: 'SingleAreaSelect',
   props: {
     value: { type: Array, default: () => [] },
     clearable: { type: Boolean, default: true },
