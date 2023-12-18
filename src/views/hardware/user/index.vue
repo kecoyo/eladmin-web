@@ -1,36 +1,425 @@
 <template>
   <div class="app-container">
-    <el-alert :closable="false" title="三级菜单1" type="success" />
-    <el-form label-width="170px" style="margin-top: 20px">
-      <el-form-item label="三级菜单缓存功能测试区">
-        <el-input v-model="input" placeholder="请输入内容" style="width: 360px;" />
-      </el-form-item>
-    </el-form>
-    <div>
-      <blockquote class="my-blockquote"> 三级菜单缓存配置教程</blockquote>
-      <pre class="my-code">
- 1、将前后端代码更新为最新版版本，或对照提交记录修改,点击查看-> <a href="https://gitee.com/elunez/eladmin/commit/43d1a63577f9d5347924355708429a2d210e29f7" target="_blank">提交(1)</a>、<a href="https://gitee.com/elunez/eladmin/commit/46393875148fcca5eaa327d4073f72edb3752f5c" target="_blank">提交(2)</a>、<a href="https://gitee.com/elunez/eladmin-web/commit/c93c99d8921abbb2c52afc806635f5ca08d6bda8" target="_blank">提交(3)</a>
- 2、将 二级菜单 的 菜单类型 设置为 目录 级别，并且原有的 组件路径 需要清空
- 3、将 三级菜单 的 菜单缓存 设置为 是，最后将 组件名称 填写正确
- 4、具体设置可参考 菜单管理 的 多级菜单 配置进行进行相应的修改
- </pre>
-      <blockquote class="my-blockquote">更多帮助</blockquote>
-      <pre class="my-code">QQ交流群：一群：891137268、二群：947578238、三群：659622532</pre>
+    <!--工具栏-->
+    <div class="head-container">
+      <div v-if="crud.props.searchToggle">
+        <!-- 搜索 -->
+        <single-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <el-input v-model="query.blurry" clearable size="small" placeholder="输入名称或者手机号" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-select v-model="query.enabled" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
+          <el-option v-for="item in enabledTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
+        </el-select>
+        <rrOperation />
+      </div>
+      <crudOperation show="" :permission="permission">
+        <el-button
+          slot="right"
+          v-permission="['admin','user:add']"
+          :disabled="crud.selections.length === 0"
+          class="filter-item"
+          size="mini"
+          type="primary"
+          icon="el-icon-refresh-left"
+          @click="resetPwd(crud.selections)"
+        >重置密码
+        </el-button>
+      </crudOperation>
     </div>
+    <!--表单渲染-->
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="670px">
+      <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="90px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" @keydown.native="keydown($event)" />
+        </el-form-item>
+        <el-form-item label="电话" prop="phone">
+          <el-input v-model.number="form.phone" />
+        </el-form-item>
+        <el-form-item label="姓名" prop="nickName">
+          <el-input v-model="form.nickName" @keydown.native="keydown($event)" />
+        </el-form-item>
+        <el-form-item label="部门" prop="dept.id">
+          <treeselect
+            v-model="form.dept.id"
+            :options="depts"
+            :load-options="loadDepts"
+            style="width: 183px"
+            placeholder="选择部门"
+          />
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-radio-group v-model="form.gender" style="width: 178px">
+            <el-radio label="男">男</el-radio>
+            <el-radio label="女">女</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="form.enabled" :disabled="form.id === user.id">
+            <el-radio
+              v-for="item in dict.user_status"
+              :key="item.id"
+              :label="item.value"
+            >{{ item.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select
+            v-model="form.role"
+            style="width: 467px"
+            placeholder="请选择"
+            @remove-tag="deleteTag"
+            @change="changeRole"
+          >
+            <el-option
+              v-for="item in roles"
+              :key="item.name"
+              :disabled="level !== 1 && item.level <= level"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreaData">
+          <area-select v-model="form.userAreaData" style="width: 467px" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+        <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
+      </div>
+    </el-dialog>
+    <!--表格渲染-->
+    <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
+      <el-table-column :selectable="checkboxT" type="selection" width="55" />
+      <el-table-column :show-overflow-tooltip="true" prop="id" label="ID" />
+      <el-table-column :show-overflow-tooltip="true" prop="username" label="用户名" />
+      <el-table-column :show-overflow-tooltip="true" prop="nickName" label="姓名" />
+      <el-table-column prop="gender" label="性别" />
+      <el-table-column :show-overflow-tooltip="true" prop="phone" label="电话" />
+      <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
+        <template slot-scope="scope">
+          <div>{{ scope.row.dept.name }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" prop="enabled">
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.enabled"
+            :disabled="user.id === scope.row.id"
+            active-color="#409EFF"
+            inactive-color="#F56C6C"
+            @change="changeEnabled(scope.row, scope.row.enabled)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column :show-overflow-tooltip="true" prop="createTime" width="135" label="创建日期" />
+      <el-table-column
+        v-if="checkPer(['admin','user:edit','user:del'])"
+        label="操作"
+        width="115"
+        align="center"
+        fixed="right"
+      >
+        <template slot-scope="scope">
+          <udOperation
+            :data="scope.row"
+            :permission="permission"
+            :disabled-dle="scope.row.id === user.id"
+          />
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--分页组件-->
+    <pagination />
   </div>
 </template>
+
 <script>
+import crudUser from '@/api/system/user'
+import { isvalidPhone } from '@/utils/validate'
+import { getDepts, getDeptSuperior } from '@/api/system/dept'
+import { getAll, getLevel } from '@/api/system/role'
+import CRUD, { presenter, header, form, crud } from '@crud/crud'
+import rrOperation from '@crud/RR.operation'
+import crudOperation from '@crud/CRUD.operation'
+import udOperation from '@crud/UD.operation'
+import pagination from '@crud/Pagination'
+import SingleAreaSelect from '@/components/AreaSelect/SingleAreaSelect'
+import AreaSelect from '@/components/AreaSelect/MultiAreaSelect'
+import Treeselect from '@riophae/vue-treeselect'
+import { mapGetters } from 'vuex'
+import '@riophae/vue-treeselect/dist/vue-treeselect.css'
+import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
+
+const defaultForm = { id: null, username: null, nickName: null, gender: '男', enabled: 'false', role: null, roles: [], dept: { id: null }, phone: null,
+  userAreas: [], userAreaData: [] }
 export default {
   name: 'User',
+  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, SingleAreaSelect, AreaSelect },
+  cruds() {
+    return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
+  },
+  mixins: [presenter(), header(), form(defaultForm), crud()],
+  // 数据字典
+  dicts: ['user_status'],
   data() {
+    // 自定义验证
+    const validPhone = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请输入电话号码'))
+      } else if (!isvalidPhone(value)) {
+        callback(new Error('请输入正确的11位手机号码'))
+      } else {
+        callback()
+      }
+    }
     return {
-      input: ''
+      height: document.documentElement.clientHeight - 180 + 'px;',
+      deptName: '', depts: [], deptDatas: [], level: 3, roles: [],
+      area: [],
+      defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
+      areaProps: { value: 'id', label: 'name', children: 'children', multiple: true, checkStrictly: true },
+      permission: {
+        add: ['admin', 'user:add'],
+        edit: ['admin', 'user:edit'],
+        del: ['admin', 'user:del']
+      },
+      enabledTypeOptions: [
+        { key: 'true', display_name: '激活' },
+        { key: 'false', display_name: '锁定' }
+      ],
+      rules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+        ],
+        nickName: [
+          { required: true, message: '请输入姓名', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+        ],
+        phone: [
+          { required: true, trigger: 'blur', validator: validPhone }
+        ],
+        'dept.id': [
+          { required: true, message: '请选择部门', trigger: 'blur' }
+        ],
+        'role': [
+          { required: true, message: '请选择角色', trigger: 'blur' }
+        ],
+        'userAreaData': [
+          { required: true, message: '请选择区域', trigger: 'blur' }
+        ]
+      }
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'user'
+    ]),
+    allAreas() {
+      return this.$store.state.baseInfo.allAreas
+    }
+  },
+  created() {
+    this.crud.msg.add = '新增成功，默认密码：123456'
+  },
+  mounted: function() {
+    const that = this
+    window.onresize = function temp() {
+      that.height = document.documentElement.clientHeight - 180 + 'px;'
+    }
+  },
+  methods: {
+    // 禁止输入空格
+    keydown(e) {
+      if (e.keyCode === 32) {
+        e.returnValue = false
+      }
+    },
+    changeRole(value) {
+    },
+    deleteTag(value) {
+    },
+    [CRUD.HOOK.beforeRefresh](curd) {
+      const [province, city, county] = this.area
+      curd.query = { ...curd.query, ...this.query, province, city, county }
+      return true
+    },
+    // 新增与编辑前做的操作
+    [CRUD.HOOK.afterToCU](crud, form) {
+      this.getRoles()
+      if (form.id == null) {
+        this.getDepts()
+      } else {
+        this.getSupDepts(form.dept.id)
+      }
+      this.getRoleLevel()
+      form.enabled = form.enabled.toString()
+    },
+    // 新增前将多选的值设置为空
+    [CRUD.HOOK.beforeToAdd]() {
+    },
+    // 初始化编辑时候的角色与岗位
+    [CRUD.HOOK.beforeToEdit](crud, form) {
+      // 初始化角色
+      crud.form.role = crud.form.roles[0].id
+
+      // 初始化区域选择器
+      if (crud.form.userAreas) {
+        crud.form.userAreaData = crud.form.userAreas.map(area => {
+          return [area.province, area.city, area.county].filter(val => val !== 0)
+        })
+      }
+    },
+    // 提交前做的操作
+    [CRUD.HOOK.afterValidateCU](crud) {
+      if (!crud.form.dept.id) {
+        this.$message({
+          message: '部门不能为空',
+          type: 'warning'
+        })
+        return false
+      }
+
+      // 处理角色
+      crud.form.roles = [{ id: crud.form.role }]
+
+      // 处理区域选择器
+      if (crud.form.userAreaData) {
+        crud.form.userAreas = crud.form.userAreaData.map(area => {
+          return { province: area[0] || 0, city: area[1] || 0, county: area[2] || 0 }
+        })
+      }
+
+      return true
+    },
+    // 获取左侧部门数据
+    getDeptDatas(node, resolve) {
+      const sort = 'id,desc'
+      const params = { sort: sort }
+      if (typeof node !== 'object') {
+        if (node) {
+          params['name'] = node
+        }
+      } else if (node.level !== 0) {
+        params['pid'] = node.data.id
+      }
+      setTimeout(() => {
+        getDepts(params).then(res => {
+          if (resolve) {
+            resolve(res.content)
+          } else {
+            this.deptDatas = res.content
+          }
+        })
+      }, 100)
+    },
+    getDepts() {
+      getDepts({ enabled: true }).then(res => {
+        this.depts = res.content.map(function(obj) {
+          if (obj.hasChildren) {
+            obj.children = null
+          }
+          return obj
+        })
+      })
+    },
+    getSupDepts(deptId) {
+      getDeptSuperior(deptId).then(res => {
+        const date = res.content
+        this.buildDepts(date)
+        this.depts = date
+      })
+    },
+    buildDepts(depts) {
+      depts.forEach(data => {
+        if (data.children) {
+          this.buildDepts(data.children)
+        }
+        if (data.hasChildren && !data.children) {
+          data.children = null
+        }
+      })
+    },
+    // 获取弹窗内部门数据
+    loadDepts({ action, parentNode, callback }) {
+      if (action === LOAD_CHILDREN_OPTIONS) {
+        getDepts({ enabled: true, pid: parentNode.id }).then(res => {
+          parentNode.children = res.content.map(function(obj) {
+            if (obj.hasChildren) {
+              obj.children = null
+            }
+            return obj
+          })
+          setTimeout(() => {
+            callback()
+          }, 200)
+        })
+      }
+    },
+    // 切换部门
+    handleNodeClick(data) {
+      if (data.pid === 0) {
+        this.query.deptId = null
+      } else {
+        this.query.deptId = data.id
+      }
+      this.crud.toQuery()
+    },
+    // 改变状态
+    changeEnabled(data, val) {
+      this.$confirm('此操作将 "' + this.dict.label.user_status[val] + '" ' + data.username + ', 是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        crudUser.edit(data).then(res => {
+          this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
+        }).catch(() => {
+          data.enabled = !data.enabled
+        })
+      }).catch(() => {
+        data.enabled = !data.enabled
+      })
+    },
+    // 获取弹窗内角色数据
+    getRoles() {
+      getAll().then(res => {
+        this.roles = res
+      }).catch(() => { })
+    },
+    // 获取权限级别
+    getRoleLevel() {
+      getLevel().then(res => {
+        this.level = res.level
+      }).catch(() => { })
+    },
+    checkboxT(row, rowIndex) {
+      return row.id !== this.user.id
+    },
+    resetPwd(datas) {
+      this.$confirm(`你选中了 ${datas.length} 位用户，确认重置用户的密码吗?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const ids = []
+        datas.forEach(val => {
+          ids.push(val.id)
+        })
+        console.log(ids)
+        crudUser.resetPwd(ids).then(() => {
+          this.crud.notify('重置成功, 用户新密码:123456', CRUD.NOTIFICATION_TYPE.SUCCESS)
+        }).catch(() => {})
+      }).catch(() => {
+      })
     }
   }
 }
 </script>
-<style scoped>
-  .my-code a{
-    color:#009688;
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
+    height: 30px;
+    line-height: 30px;
   }
 </style>

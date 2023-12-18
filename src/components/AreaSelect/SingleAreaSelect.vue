@@ -1,5 +1,5 @@
 <template>
-  <el-cascader v-model="selected" :options="allAreas" :props="areaProps" :clearable="clearable" :placeholder="placeholder" @change="handleChange" />
+  <el-cascader v-model="selected" :options="userAreas" :props="areaProps" :clearable="clearable" :placeholder="placeholder" @change="handleChange" />
 </template>
 
 <script>
@@ -22,12 +22,18 @@ export default {
     }
   },
   computed: {
-    allAreas() {
+    userAreas() {
+      const allAreas = this.$store.state.baseInfo.allAreas
       const allAreasMap = this.$store.state.baseInfo.allAreasMap
-      const userArea = JSON.parse(this.$store.state.user.user.userArea)
+      const oldUserAreas = this.$store.state.user.user.userAreas
+      const dataScope = this.$store.state.user.user.roles[0].dataScope
 
       if (Object.keys(allAreasMap).length === 0) {
         return []
+      }
+
+      if (dataScope === '全部') {
+        return allAreas
       }
 
       const userAreas = []
@@ -52,18 +58,18 @@ export default {
         return userAreasMap[cityId]
       }
 
-      for (const area of userArea) {
-        if (area.length === 1) {
-          const province = allAreasMap[area[0]]
-          userAreas.push(province)
-        } else if (area.length === 2) {
-          const city = allAreasMap[area[1]]
-          const province = getProvince(area[0])
-          province.children.push(city)
-        } else if (area.length === 3) {
-          const county = allAreasMap[area[2]]
-          const city = getCity(area[0], area[1])
-          city.children.push(county)
+      for (const userArea of oldUserAreas) {
+        if (userArea.county) {
+          const countyArea = allAreasMap[userArea.county]
+          const cityArea = getCity(userArea.province, userArea.city)
+          cityArea.children.push(countyArea)
+        } else if (userArea.city) {
+          const cityArea = allAreasMap[userArea.city]
+          const provinceArea = getProvince(userArea.province)
+          provinceArea.children.push(cityArea)
+        } else if (userArea.province) {
+          const provinceArea = allAreasMap[userArea.province]
+          userAreas.push(provinceArea)
         }
       }
 

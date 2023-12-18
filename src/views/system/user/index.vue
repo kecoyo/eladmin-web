@@ -124,8 +124,8 @@
                 />
               </el-select>
             </el-form-item>
-            <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreas">
-              <area-select v-model="form.userAreas" style="width: 467px" />
+            <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreaData">
+              <area-select v-model="form.userAreaData" style="width: 467px" />
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -199,7 +199,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 
 const defaultForm = { id: null, username: null, nickName: null, gender: '男', enabled: 'false', role: null, roles: [], dept: { id: null }, phone: null,
-  userArea: null, userAreas: null }
+  userAreas: [], userAreaData: [] }
 export default {
   name: 'User',
   components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker, AreaSelect },
@@ -252,7 +252,7 @@ export default {
         'role': [
           { required: true, message: '请选择角色', trigger: 'blur' }
         ],
-        'userAreas': [
+        'userAreaData': [
           { required: true, message: '请选择区域', trigger: 'blur' }
         ]
       }
@@ -302,9 +302,14 @@ export default {
     },
     // 初始化编辑时候的角色与岗位
     [CRUD.HOOK.beforeToEdit](crud, form) {
+      // 初始化角色
       crud.form.role = crud.form.roles[0].id
-      if (crud.form.userArea) {
-        crud.form.userAreas = JSON.parse(crud.form.userArea)
+
+      // 初始化区域选择器
+      if (crud.form.userAreas) {
+        crud.form.userAreaData = crud.form.userAreas.map(area => {
+          return [area.province, area.city, area.county].filter(val => val !== 0)
+        })
       }
     },
     // 提交前做的操作
@@ -317,10 +322,14 @@ export default {
         return false
       }
 
+      // 处理角色
       crud.form.roles = [{ id: crud.form.role }]
 
-      if (crud.form.userAreas) {
-        crud.form.userArea = JSON.stringify(crud.form.userAreas)
+      // 处理区域选择器
+      if (crud.form.userAreaData) {
+        crud.form.userAreas = crud.form.userAreaData.map(area => {
+          return { province: area[0] || 0, city: area[1] || 0, county: area[2] || 0 }
+        })
       }
 
       return true
