@@ -1,4 +1,4 @@
-import { getAllAreas, getDeviceTypes } from '@/api/baseInfo'
+import { getAllAreas, getDeviceTypes, getDeviceModels } from '@/api/baseInfo'
 
 const state = {
   // 所有区域
@@ -8,7 +8,12 @@ const state = {
   // 设备类型
   deviceTypes: [],
   // 设备类型Map
-  deviceTypesMap: {}
+  deviceTypesMap: {},
+
+  // 设备型号
+  deviceModels: [],
+  // 设备型号Map
+  deviceModelsMap: {}
 }
 
 const mutations = {
@@ -115,6 +120,49 @@ const actions = {
 
           commit('CHANGE_BASE_INFO', { key: 'deviceTypes', value: res })
           commit('CHANGE_BASE_INFO', { key: 'deviceTypesMap', value: map })
+          resolve(res)
+        })
+        .catch(error => {
+          reject(error)
+        })
+    })
+  },
+  getDeviceModels({ commit }) {
+    return new Promise((resolve, reject) => {
+      getDeviceModels()
+        .then(res => {
+          const list = []
+          const map = {}
+
+          res.forEach(item => {
+            const pid = `${item.providerId}`
+            const tid = `${item.providerId}_${item.deviceType}`
+            const mid = `${item.providerId}_${item.deviceType}_${item.id}`
+            if (!map[pid]) {
+              map[pid] = { id: item.providerId, name: item.providerName, children: [] }
+              list.push(map[pid])
+            }
+            if (!map[tid]) {
+              map[tid] = { id: item.deviceType, name: item.deviceTypeName, children: [] }
+              map[pid].children.push(map[tid])
+            }
+            if (!map[mid]) {
+              map[mid] = { id: item.id, name: item.deviceMode }
+              map[tid].children.push(map[mid])
+            }
+          })
+
+          // 获取设备型号名称
+          map.getName = function(id, level) {
+            const deviceModel = this[`${level}_${id}`]
+            if (deviceModel) {
+              return deviceModel.name
+            }
+            return ''
+          }
+
+          commit('CHANGE_BASE_INFO', { key: 'deviceModels', value: list })
+          commit('CHANGE_BASE_INFO', { key: 'deviceModelsMap', value: map })
           resolve(res)
         })
         .catch(error => {

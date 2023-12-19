@@ -24,7 +24,7 @@
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
-          <img :src="user.avatarName ? baseApi + '/avatar/' + user.avatarName : Avatar" class="user-avatar">
+          <img :src="user.avatarName ? baseUrl + '/avatar/' + user.avatarName : Avatar" class="user-avatar">
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown">
@@ -79,7 +79,7 @@ export default {
       'sidebar',
       'device',
       'user',
-      'baseApi'
+      'baseUrl'
     ]),
     show: {
       get() {

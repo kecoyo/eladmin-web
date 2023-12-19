@@ -48,7 +48,7 @@ export default {
           async customUpload(file, insertFn) { // JS 语法
             upload(_this.imagesUploadApi, file).then(res => {
               const data = res.data
-              const url = _this.baseApi + '/file/' + data.type + '/' + data.realName
+              const url = _this.baseUrl + '/file/' + data.type + '/' + data.realName
               // 最后插入图片
               insertFn(url, '', '')
             })
@@ -58,7 +58,7 @@ export default {
       computed: {
         ...mapGetters([
           'imagesUploadApi',
-          'baseApi'
+          'baseUrl'
         ])
       },
       editMode: 'simple',

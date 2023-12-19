@@ -29,7 +29,7 @@
       <el-table-column type="selection" width="55" />
       <el-table-column prop="id" label="学校ID" width="90" />
       <el-table-column prop="name" label="学校名称" />
-      <el-table-column label="所属区域">
+      <el-table-column label="所在区域">
         <template slot-scope="scope">
           <span v-if="allAreasMap.getFullNames">
             {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}

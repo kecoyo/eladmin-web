@@ -36,7 +36,7 @@ export default {
   computed: {
     ...mapGetters([
       'imagesUploadApi',
-      'baseApi'
+      'baseUrl'
     ])
   },
   mounted() {
@@ -51,7 +51,7 @@ export default {
       files.forEach(image => {
         upload(_this.imagesUploadApi, image).then(res => {
           const data = res.data
-          const url = _this.baseApi + '/file/' + data.type + '/' + data.realName
+          const url = _this.baseUrl + '/file/' + data.type + '/' + data.realName
           insert(url)
         })
       })

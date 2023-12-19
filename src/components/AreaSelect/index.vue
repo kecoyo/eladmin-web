@@ -4,20 +4,17 @@
 
 <script>
 export default {
-  name: 'SingleAreaSelect',
+  name: 'AreaSelect',
   props: {
     value: { type: Array, default: () => [] },
     clearable: { type: Boolean, default: true },
-    placeholder: { type: String, default: '请选择区域' }
+    placeholder: { type: String, default: '请选择区域' },
+    multiple: { type: Boolean, default: false },
+    checkStrictly: { type: Boolean, default: false }
   },
   data() {
     return {
-      areaProps: {
-        value: 'id',
-        label: 'name',
-        children: 'children',
-        checkStrictly: true
-      },
+      areaProps: { value: 'id', label: 'name', children: 'children', multiple: this.multiple, checkStrictly: this.checkStrictly },
       selected: []
     }
   },
@@ -76,10 +73,46 @@ export default {
       return userAreas
     }
   },
+  watch: {
+    value: {
+      handler(value) {
+        this.selected = value
+      },
+      immediate: true
+    }
+  },
   mounted() {},
   methods: {
     handleChange(value) {
-      this.$emit('input', value)
+      if (this.multiple) {
+        const areaStrs = []
+
+        for (let i = 0; i < value.length; i++) {
+          const area = value[i]
+          if (area.length === 1) {
+            areaStrs.push(area.join('-'))
+          } else if (area.length === 2) {
+            if (areaStrs.includes([area[0]].join('-'))) {
+              this.$message.error('不能同时选择省和该省下的城市')
+            } else {
+              areaStrs.push(area.join('-'))
+            }
+          } else if (area.length === 3) {
+            if (areaStrs.includes([area[0]].join('-'))) {
+              this.$message.error('不能同时选择省和该省下的城市')
+            } else if (areaStrs.includes([area[0], area[1]].join('-'))) {
+              this.$message.error('不能同时选择市和该市下的区县')
+            } else {
+              areaStrs.push(area.join('-'))
+            }
+          }
+        }
+
+        const areas = areaStrs.map(areaStr => areaStr.split('-').map(Number))
+        this.$emit('input', areas)
+      } else {
+        this.$emit('input', value)
+      }
     }
   }
 }

@@ -27,7 +27,7 @@ export default {
   computed: {
     ...mapGetters([
       'imagesUploadApi',
-      'baseApi'
+      'baseUrl'
     ])
   },
   mounted() {
@@ -40,7 +40,7 @@ export default {
     imgAdd(pos, $file) {
       upload(this.imagesUploadApi, $file).then(res => {
         const data = res.data
-        const url = this.baseApi + '/file/' + data.type + '/' + data.realName
+        const url = this.baseUrl + '/file/' + data.type + '/' + data.realName
         this.$refs.md.$img2Url(pos, url)
       })
     }

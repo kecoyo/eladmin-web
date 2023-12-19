@@ -13,3 +13,10 @@ export function getDeviceTypes() {
     method: 'get'
   })
 }
+
+export function getDeviceModels() {
+  return request({
+    url: 'ljadmin/provider/getProviderDeviceDict',
+    method: 'get'
+  })
+}

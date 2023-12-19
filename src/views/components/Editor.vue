@@ -26,7 +26,7 @@ export default {
   computed: {
     ...mapGetters([
       'imagesUploadApi',
-      'baseApi'
+      'baseUrl'
     ])
   },
   mounted() {

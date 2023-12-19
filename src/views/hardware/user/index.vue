@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <single-area-select v-model="area" clearable placeholder="请输入区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <single-area-select v-model="area" clearable placeholder="请选择区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.blurry" clearable size="small" placeholder="输入名称或者手机号" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <el-select v-model="query.enabled" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
           <el-option v-for="item in enabledTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
@@ -143,8 +143,7 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
-import SingleAreaSelect from '@/components/AreaSelect/SingleAreaSelect'
-import AreaSelect from '@/components/AreaSelect/MultiAreaSelect'
+import AreaSelect from '@/components/AreaSelect'
 import Treeselect from '@riophae/vue-treeselect'
 import { mapGetters } from 'vuex'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
@@ -154,7 +153,7 @@ const defaultForm = { id: null, username: null, nickName: null, gender: '男', e
   userAreas: [], userAreaData: [] }
 export default {
   name: 'User',
-  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, SingleAreaSelect, AreaSelect },
+  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, AreaSelect },
   cruds() {
     return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
   },
