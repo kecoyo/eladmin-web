@@ -125,7 +125,7 @@
               </el-select>
             </el-form-item>
             <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreaData">
-              <area-select v-model="form.userAreaData" style="width: 467px" />
+              <area-select v-model="form.userAreaData" multiple check-strictly style="width: 467px" />
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">

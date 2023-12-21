@@ -64,11 +64,7 @@
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
       <el-table-column prop="id" label="ID" width="90" />
-      <el-table-column label="学校名称">
-        <template slot-scope="scope">
-          {{ scope.row.name }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="name" label="学校名称" />
       <el-table-column label="所属区域">
         <template slot-scope="scope">
           <span v-if="allAreasMap.getFullNames">
@@ -85,8 +81,8 @@
       <el-table-column prop="cntDevice" label="设备数量" />
       <el-table-column v-if="checkPer(['admin', 'school:edit', 'school:del'])" label="操作" width="150px" align="center">
         <template slot-scope="scope">
-          <el-button size="mini" type="primary" icon="el-icon-edit" @click.stop="toEdit(scope.row)" />
           <!-- <udOperation :data="scope.row" :permission="permission" /> -->
+          <el-button size="mini" type="primary" icon="el-icon-edit" @click.stop="toEdit(scope.row)" />
         </template>
       </el-table-column>
     </el-table>
@@ -101,7 +97,6 @@ import { getSchoolExtendStat } from '@/api/business/school'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
-// import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import AreaSelect from '@/components/AreaSelect'
 import SchoolModeSelect from '@/components/SchoolModeSelect'
