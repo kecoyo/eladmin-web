@@ -85,6 +85,7 @@ import { STAGES } from '@/utils/constants'
 
 const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, mode: null, modes: [] }
 export default {
+  name: 'InfoPane',
   components: { AreaSelect, SchoolModeSelect },
   data() {
     return {

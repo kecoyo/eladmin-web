@@ -4,55 +4,29 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <area-select v-model="area" check-strictly clearable placeholder="请选择区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
-        <el-input v-model="query.schoolId" clearable placeholder="输入学校ID" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <el-input v-model="query.schoolName" clearable placeholder="输入学校名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.schoolName" clearable placeholder="输入教师ID/名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
-      <crudOperation :permission="permission">
-        <!-- <div slot="left" class="button-wrapper">
-          <el-button class="filter-item" size="mini" type="primary" icon="el-icon-plus" @click="toAdd">
-            新增学校
-          </el-button>
-        </div> -->
-        <div slot="right" class="school-stat-info">
-          <div>
-            已开通学校数量：<b>{{ schoolStat.cntSchool }}</b> 个
-          </div>
-          <div>
-            教师数量：<b>{{ schoolStat.cntTeacher }}</b> 个
-          </div>
-          <div>
-            学生数量：<b>{{ schoolStat.cntStudent }}</b> 个
-          </div>
-          <div>
-            家长数量：<b>{{ schoolStat.cntParent }}</b> 个
-          </div>
-        </div>
-      </crudOperation>
+      <crudOperation :permission="permission" />
     </div>
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="700px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
-        <el-input v-model="form.id" type="hidden" />
-        <el-form-item label="学校名称" prop="name">
-          <el-input v-model="form.name" style="width: 75%" />
+        <el-input v-model="form.userId" type="hidden" />
+        <el-form-item label="教师姓名" prop="userName">
+          <el-input v-model="form.userName" style="width: 75%" />
         </el-form-item>
-        <el-form-item label="区域" prop="area">
-          <area-select v-model="form.area" check-strictly style="width: 75%" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" style="width: 75%" />
         </el-form-item>
-        <el-form-item label="学校属性" prop="property">
-          <el-radio-group v-model="form.property" style="width: 75%">
-            <el-radio :label="0">无</el-radio>
-            <el-radio :label="1">省直属</el-radio>
-            <el-radio :label="2">市直属</el-radio>
+        <el-form-item label="性别" prop="gender">
+          <el-radio-group v-model="form.gender" style="width: 75%">
+            <el-radio :label="1">男</el-radio>
+            <el-radio :label="2">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="识别码" prop="idCode">
-          <el-input v-model="form.idCode" style="width: 75%" />
-        </el-form-item>
-        <el-form-item label="学校类型" prop="schoolModes">
-          <school-mode-select v-model="form.schoolModes" style="width: 75%" />
+        <el-form-item label="身份证号" prop="idCard">
+          <el-input v-model="form.idCard" style="width: 75%" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -63,26 +37,22 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="id" label="ID" width="90" />
-      <el-table-column prop="name" label="学校名称" />
-      <el-table-column label="所属区域">
+      <el-table-column prop="userId" label="教师ID" width="200" />
+      <el-table-column prop="userName" label="教师名称" width="200" />
+      <el-table-column prop="phone" label="账号" />
+      <el-table-column label="任教班级">
         <template slot-scope="scope">
-          <span v-if="allAreasMap.getFullNames">
-            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
-          </span>
+          {{ scope.row.cntClass }}
         </template>
       </el-table-column>
-      <el-table-column label="班级数量">
+      <el-table-column label="最后登录时间">
         <template slot-scope="scope">
-          {{ scope.row.cntClass + scope.row.cntClass2 }}
+          {{ scope.row.loginTime }}
         </template>
       </el-table-column>
-      <el-table-column prop="cntTeacher" label="教师数量" />
-      <el-table-column prop="cntDevice" label="设备数量" />
       <el-table-column v-if="checkPer(['admin', 'school:edit', 'school:del'])" label="操作" width="150px" align="center">
         <template slot-scope="scope">
-          <!-- <udOperation :data="scope.row" :permission="permission" /> -->
-          <el-button size="mini" type="primary" icon="el-icon-edit" @click.stop="toEdit(scope.row)" />
+          <udOperation :data="scope.row" :permission="permission" />
         </template>
       </el-table-column>
     </el-table>
@@ -92,94 +62,56 @@
 </template>
 
 <script>
-import crudSchool from '@/api/business/school'
-import { getSchoolExtendStat } from '@/api/business/school'
+import crudTeacher from '@/api/business/teacher'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
+import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
-import AreaSelect from '@/components/AreaSelect'
-import SchoolModeSelect from '@/components/SchoolModeSelect'
-import { STAGES } from '@/utils/constants'
 
-const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, schoolModes: [] }
+const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
 export default {
-  name: 'School',
-  components: { pagination, crudOperation, rrOperation, AreaSelect, SchoolModeSelect },
+  name: 'TeacherPane',
+  components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
-    return CRUD({ title: '学校', url: 'ljadmin/school/querySchool', crudMethod: { ...crudSchool } })
+    return CRUD({ title: '教师', url: 'ljadmin/school/queryTeacher', crudMethod: { ...crudTeacher } })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      loading: false,
+      schoolId: this.$route.params.schoolId,
       area: [],
       permission: {
-        add: ['admin', 'school:add'],
-        edit: ['admin', 'school:edit'],
-        del: ['admin', 'school:del']
+        add: ['admin', 'teacher:add'],
+        edit: ['admin', 'teacher:edit'],
+        del: ['admin', 'teacher:del']
       },
       rules: {
-        name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
-        area: [{ required: true, message: '请选择区域', trigger: 'blur' }],
-        schoolModes: [{ required: true, message: '请输入学校名称', trigger: 'blur' }]
-      },
-      schoolStat: {
-        cntSchool: 0,
-        cntTeacher: 0,
-        cntStudent: 0,
-        cntParent: 0
+        userName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+        phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
       }
     }
   },
-  computed: {
-    allAreasMap() {
-      return this.$store.state.baseInfo.allAreasMap
-    }
-  },
+  computed: {},
   mounted() {
     // this.crud.optShow.add = false
-    this.crud.optShow.edit = false
-    this.crud.optShow.del = false
-    this.crud.optShow.download = false
+    // this.crud.optShow.edit = false
+    // this.crud.optShow.del = false
+    // this.crud.optShow.download = false
   },
   methods: {
     [CRUD.HOOK.beforeRefresh](curd) {
-      const [province, city, county] = this.area
-      curd.query = { ...curd.query, ...this.query, province, city, county }
-
-      //  获取学校扩展信息
-      this.getSchoolExtendStat(curd.query)
-
+      curd.query = { ...curd.query, ...this.query, schoolId: this.schoolId }
       return true
     },
     // 新增编辑前做的操作
     [CRUD.HOOK.beforeToCU](crud, form) {
-      const area = []
-      if (form.province) area.push(form.province)
-      if (form.city) area.push(form.city)
-      if (form.county) area.push(form.county)
-      this.form.area = area
-
-      this.form.property = Number(this.form.property || 0)
-
-      this.form.schoolModes = STAGES.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
+      this.form.schoolId = this.schoolId
+      this.form.gender = form.gender || 1
     },
     // 提交前
     [CRUD.HOOK.beforeSubmit]() {
-      const [province, city, county] = this.form.area
-      this.form.province = province
-      this.form.city = city
-      this.form.county = county
-
-      this.form.schoolModes = this.form.schoolModes.filter(item => item.checked)
-
       return true
-    },
-    getSchoolExtendStat(params) {
-      getSchoolExtendStat(params).then(res => {
-        this.schoolStat = res
-      })
     },
     toEdit(row) {
       this.$router.push({
