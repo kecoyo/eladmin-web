@@ -74,9 +74,7 @@
       </el-table-column>
       <el-table-column label="所在区域">
         <template slot-scope="scope">
-          <span v-if="allAreasMap.getFullNames">
-            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
-          </span>
+          {{ allAreasMap?.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
         </template>
       </el-table-column>
       <el-table-column prop="schoolName" label="所在学校" />
@@ -162,7 +160,7 @@ export default {
     [CRUD.HOOK.beforeToEdit](crud, form) {
       // 初始化区域选择器
       if (crud.form.province) {
-        crud.form.showAreaName = this.allAreasMap.getFullNames([crud.form.province, crud.form.city, crud.form.county])
+        crud.form.showAreaName = this.allAreasMap?.getFullNames([crud.form.province, crud.form.city, crud.form.county])
       }
       if (crud.form.creator) {
         crud.form.showCreatorName = `${crud.form.creator}（${crud.form.createdBy}）`

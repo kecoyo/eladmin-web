@@ -20,3 +20,10 @@ export function getDeviceModels() {
     method: 'get'
   })
 }
+
+export function getSubjects() {
+  return request({
+    url: 'ljadmin/baseInfo/subjects',
+    method: 'get'
+  })
+}

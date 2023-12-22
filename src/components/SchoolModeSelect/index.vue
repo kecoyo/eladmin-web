@@ -14,19 +14,19 @@
 </template>
 
 <script>
-import { STAGES } from '@/utils/constants'
+import { PHASE_TYPE } from '@/utils/constants'
 
 export default {
   name: 'SchoolModeSelect',
   props: {
     value: {
       type: Array,
-      default: () => STAGES.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
+      default: () => PHASE_TYPE.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
     }
   },
   data() {
     return {
-      stages: STAGES,
+      stages: PHASE_TYPE,
       selected: []
     }
   },

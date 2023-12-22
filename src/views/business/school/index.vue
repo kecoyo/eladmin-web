@@ -51,8 +51,8 @@
         <el-form-item label="识别码" prop="idCode">
           <el-input v-model="form.idCode" style="width: 75%" />
         </el-form-item>
-        <el-form-item label="学校类型" prop="schoolModes">
-          <school-mode-select v-model="form.schoolModes" style="width: 75%" />
+        <el-form-item label="学校类型" prop="modes">
+          <school-mode-select v-model="form.modes" style="width: 75%" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -71,9 +71,7 @@
       </el-table-column>
       <el-table-column label="所属区域">
         <template slot-scope="scope">
-          <span v-if="allAreasMap.getFullNames">
-            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
-          </span>
+          {{ allAreasMap?.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
         </template>
       </el-table-column>
       <el-table-column label="班级数量">
@@ -105,7 +103,7 @@ import crudOperation from '@crud/CRUD.operation'
 import pagination from '@crud/Pagination'
 import AreaSelect from '@/components/AreaSelect'
 import SchoolModeSelect from '@/components/SchoolModeSelect'
-import { STAGES } from '@/utils/constants'
+import { PHASE_TYPE } from '@/utils/constants'
 
 const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, schoolModes: [] }
 export default {
@@ -127,7 +125,19 @@ export default {
       rules: {
         name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
         area: [{ required: true, message: '请选择区域', trigger: 'blur' }],
-        schoolModes: [{ required: true, message: '请输入学校名称', trigger: 'blur' }]
+        modes: [
+          { required: true, message: '请选择学校类型', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (value.filter(item => item.checked).length === 0) {
+                callback(new Error('学校类型不能为空'))
+                return
+              }
+              callback()
+            },
+            trigger: 'change'
+          }
+        ]
       },
       schoolStat: {
         cntSchool: 0,
@@ -149,6 +159,7 @@ export default {
     this.crud.optShow.download = false
   },
   methods: {
+    // 刷新前做的操作
     [CRUD.HOOK.beforeRefresh](curd) {
       const [province, city, county] = this.area
       curd.query = { ...curd.query, ...this.query, province, city, county }
@@ -168,7 +179,13 @@ export default {
 
       this.form.property = Number(this.form.property || 0)
 
-      this.form.schoolModes = STAGES.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
+      const mode = this.form.mode ? JSON.parse(this.form.mode) : {}
+      this.form.modes = PHASE_TYPE.map(item => ({
+        checked: !!mode[item.phase],
+        id: item.id,
+        phase: item.phase,
+        year: mode[item.phase] || item.years[0].id
+      }))
     },
     // 提交前
     [CRUD.HOOK.beforeSubmit]() {
@@ -177,7 +194,8 @@ export default {
       this.form.city = city
       this.form.county = county
 
-      this.form.schoolModes = this.form.schoolModes.filter(item => item.checked)
+      // 学校类型
+      this.form.schoolModes = this.form.modes.filter(item => item.checked)
 
       return true
     },

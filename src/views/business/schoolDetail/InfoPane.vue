@@ -41,10 +41,10 @@
       </el-descriptions-item>
     </el-descriptions>
     <div class="pane-footer">
-      <el-button type="primary" size="small" icon="el-icon-edit" @click.stop="toEdit">修改</el-button>
+      <el-button type="primary" size="small" icon="el-icon-edit" @click.stop="crud.toEdit(schoolInfo)">修改</el-button>
     </div>
     <!--表单组件-->
-    <el-dialog append-to-body :close-on-click-modal="false" :before-close="cancelEdit" :visible.sync="status.cu > 0" :title="status.title" width="700px">
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="700px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
         <el-input v-model="form.id" type="hidden" />
         <el-form-item label="学校名称" prop="name">
@@ -68,8 +68,8 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="text" @click="cancelEdit">取消</el-button>
-        <el-button :loading="status.cu === 2" type="primary" @click="submitForm">确认</el-button>
+        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+        <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
       </div>
     </el-dialog>
   </div>
@@ -77,36 +77,41 @@
 
 <script>
 import crudSchool from '@/api/business/school'
-import { getSchoolInfo } from '@/api/business/school'
 import { SCHOOL_PROPERTY, PHASE_TYPE } from '@/utils/constants'
+import CRUD, { presenter, form, crud } from '@crud/crud2'
 import AreaSelect from '@/components/AreaSelect'
 import SchoolModeSelect from '@/components/SchoolModeSelect'
-import { STAGES } from '@/utils/constants'
 
-const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, mode: null, modes: [] }
+const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, mode: null, modes: undefined }
 export default {
   name: 'InfoPane',
   components: { AreaSelect, SchoolModeSelect },
+  cruds() {
+    return CRUD({ title: '学校', url: 'ljadmin/school/getSchoolInfo', crudMethod: { ...crudSchool } })
+  },
+  mixins: [presenter(), form(defaultForm), crud()],
   data() {
     return {
       id: this.$route.params.schoolId,
       schoolInfo: null,
       schoolModes: [],
       schoolPropertyList: SCHOOL_PROPERTY,
-      form: { ...defaultForm },
-      status: {
-        cu: 0,
-        title: '修改学校信息'
-      },
-      permission: {
-        add: ['admin', 'school:add'],
-        edit: ['admin', 'school:edit'],
-        del: ['admin', 'school:del']
-      },
       rules: {
         name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
         area: [{ required: true, message: '请选择区域', trigger: 'blur' }],
-        modes: [{ required: true, message: '请输入学校类型', trigger: 'blur' }]
+        modes: [
+          { required: true, message: '请选择学校类型', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              if (value.filter(item => item.checked).length === 0) {
+                callback(new Error('学校类型不能为空'))
+                return
+              }
+              callback()
+            },
+            trigger: 'change'
+          }
+        ]
       }
     }
   },
@@ -115,22 +120,23 @@ export default {
       return this.$store.state.baseInfo.allAreasMap
     }
   },
-  mounted() {
-    this.refresh()
-  },
   methods: {
-    // 刷新学校信息
-    refresh() {
-      getSchoolInfo(this.id).then(res => {
-        this.schoolInfo = res
-        const modes = JSON.parse(res.mode)
-        this.schoolModes = Object.keys(modes).map(key => {
-          return { id: key, name: `${PHASE_TYPE.getName(key, ['key'])} - ${modes[key]}年` }
-        })
+    // 刷新前做的操作
+    [CRUD.HOOK.beforeRefresh](curd) {
+      curd.query = { ...curd.query, ...this.query, id: this.id }
+      return true
+    },
+    // 刷新后做的操作
+    [CRUD.HOOK.afterRefresh](curd) {
+      this.schoolInfo = curd.data
+      const modes = JSON.parse(this.schoolInfo.mode)
+      this.schoolModes = Object.keys(modes).map(key => {
+        return { id: key, name: `${PHASE_TYPE.getName(key, ['phase'])} - ${modes[key]}年` }
       })
+      return true
     },
     // 编辑前做的操作
-    beforeToEdit(form) {
+    [CRUD.HOOK.beforeToEdit](crud, form) {
       const area = []
       if (form.province) area.push(form.province)
       if (form.city) area.push(form.city)
@@ -140,7 +146,7 @@ export default {
       this.form.property = Number(this.form.property || 0)
 
       const mode = JSON.parse(this.form.mode)
-      this.form.modes = STAGES.map(item => ({
+      this.form.modes = PHASE_TYPE.map(item => ({
         checked: !!mode[item.phase],
         id: item.id,
         phase: item.phase,
@@ -148,7 +154,7 @@ export default {
       }))
     },
     // 提交前做的操作
-    beforeSubmit() {
+    [CRUD.HOOK.beforeSubmit]() {
       const [province, city, county] = this.form.area
       this.form.province = province
       this.form.city = city
@@ -158,35 +164,6 @@ export default {
       this.form.schoolModes = this.form.modes.filter(item => item.checked)
 
       return true
-    },
-    toEdit() {
-      this.status.cu = 1
-      this.form = { ...this.schoolInfo }
-      this.beforeToEdit(this.form)
-    },
-    cancelEdit() {
-      this.status.cu = 0
-      this.form = { ...defaultForm }
-    },
-    submitForm() {
-      this.$refs.form.validate(valid => {
-        if (valid && this.beforeSubmit()) {
-          this.status.cu = 2
-          crudSchool
-            .edit(this.form)
-            .then(() => {
-              this.$message({
-                message: '修改成功',
-                type: 'success'
-              })
-              this.status.cu = 0
-              this.refresh()
-            })
-            .finally(() => {
-              this.status.cu = 0
-            })
-        }
-      })
     }
   }
 }

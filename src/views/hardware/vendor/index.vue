@@ -38,9 +38,7 @@
       <el-table-column prop="name" label="名称" />
       <el-table-column label="所属区域">
         <template slot-scope="scope">
-          <span v-if="allAreasMap.getFullNames">
-            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
-          </span>
+          {{ allAreasMap?.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
         </template>
       </el-table-column>
       <el-table-column prop="liaison" label="联系人" />

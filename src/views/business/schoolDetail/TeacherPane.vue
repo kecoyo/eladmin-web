@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <el-input v-model="query.schoolName" clearable placeholder="输入教师ID/名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.userKey" clearable placeholder="输入教师ID/名称" style="width: 200px" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation />
       </div>
       <crudOperation :permission="permission" />
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import crudTeacher from '@/api/business/teacher'
+import { addTeacher, updateTeacher, deleteTeacher } from '@/api/business/school'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
@@ -74,7 +74,7 @@ export default {
   name: 'TeacherPane',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
-    return CRUD({ title: '教师', url: 'ljadmin/school/queryTeacher', crudMethod: { ...crudTeacher } })
+    return CRUD({ title: '教师', idField: 'userId', url: 'ljadmin/school/queryTeacher', delParams: {}, crudMethod: { add: addTeacher, edit: updateTeacher, del: deleteTeacher } })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
@@ -111,6 +111,10 @@ export default {
     },
     // 提交前
     [CRUD.HOOK.beforeSubmit]() {
+      return true
+    },
+    [CRUD.HOOK.beforeDelete](crud, data) {
+      crud.delParams = { schoolId: this.schoolId }
       return true
     },
     toEdit(row) {

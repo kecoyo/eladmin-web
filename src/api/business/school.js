@@ -40,4 +40,47 @@ export function getSchoolInfo(id) {
   })
 }
 
+export function addTeacher(data) {
+  return request({
+    url: 'ljadmin/school/addTeacher',
+    method: 'post',
+    data
+  })
+}
+
+export function updateTeacher(data) {
+  return request({
+    url: 'ljadmin/school/updateTeacher',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteTeacher(ids, delParams) {
+  return request({
+    url: 'ljadmin/school/deleteTeacher',
+    method: 'post',
+    data: {
+      ...delParams,
+      ids
+    }
+  })
+}
+
+export function addSubject(data) {
+  return request({
+    url: 'ljadmin/school/addSubject',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteSubject(data) {
+  return request({
+    url: 'ljadmin/school/deleteSubject',
+    method: 'post',
+    data
+  })
+}
+
 export default { add, edit, del }

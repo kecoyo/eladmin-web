@@ -27,8 +27,6 @@ function CRUD(options) {
     query: {},
     // 查询数据的参数
     params: {},
-    // 删除数据的参数
-    delParams: {},
     // Form 表单
     form: {},
     // 重置表单
@@ -39,10 +37,10 @@ function CRUD(options) {
     time: 50,
     // CRUD Method
     crudMethod: {
-      add: (form) => {},
-      del: (id) => {},
-      edit: (form) => {},
-      get: (id) => {}
+      add: form => {},
+      del: id => {},
+      edit: form => {},
+      get: id => {}
     },
     // 主页操作栏显示哪些按钮
     optShow: {
@@ -76,7 +74,7 @@ function CRUD(options) {
         } else if (this.add === CRUD.STATUS.PROCESSING || this.edit === CRUD.STATUS.PROCESSING) {
           return CRUD.STATUS.PROCESSING
         }
-        throw new Error('wrong crud\'s cu status')
+        throw new Error("wrong crud's cu status")
       },
       // 标题
       get title() {
@@ -88,14 +86,6 @@ function CRUD(options) {
       add: '新增成功',
       edit: '编辑成功',
       del: '删除成功'
-    },
-    page: {
-      // 页码
-      page: 0,
-      // 每页数据条数
-      size: 10,
-      // 总数据条数
-      total: 0
     },
     // 整体loading
     loading: false,
@@ -122,7 +112,6 @@ function CRUD(options) {
     },
     // 搜索
     toQuery() {
-      crud.page.page = 1
       crud.refresh()
     },
     // 刷新
@@ -133,25 +122,21 @@ function CRUD(options) {
       return new Promise((resolve, reject) => {
         crud.loading = true
         // 请求数据
-        initData(crud.url, crud.getQueryParams()).then(data => {
-          const table = crud.getTable()
-          if (table && table.lazy) { // 懒加载子节点数据，清掉已加载的数据
-            table.store.states.treeData = {}
-            table.store.states.lazyTreeNodeMap = {}
-          }
-          crud.page.total = data.totalElements
-          crud.data = data.content
-          crud.resetDataStatus()
-          // time 毫秒后显示表格
-          setTimeout(() => {
+        initData(crud.url, crud.getQueryParams())
+          .then(data => {
+            crud.data = data
+            crud.resetDataStatus()
+            // time 毫秒后显示表格
+            setTimeout(() => {
+              crud.loading = false
+              callVmHook(crud, CRUD.HOOK.afterRefresh)
+            }, crud.time)
+            resolve(data)
+          })
+          .catch(err => {
             crud.loading = false
-            callVmHook(crud, CRUD.HOOK.afterRefresh)
-          }, crud.time)
-          resolve(data)
-        }).catch(err => {
-          crud.loading = false
-          reject(err)
-        })
+            reject(err)
+          })
       })
     },
     /**
@@ -258,16 +243,19 @@ function CRUD(options) {
         return
       }
       crud.status.add = CRUD.STATUS.PROCESSING
-      crud.crudMethod.add(crud.form).then(() => {
-        crud.status.add = CRUD.STATUS.NORMAL
-        crud.resetForm()
-        crud.addSuccessNotify()
-        callVmHook(crud, CRUD.HOOK.afterSubmit)
-        crud.toQuery()
-      }).catch(() => {
-        crud.status.add = CRUD.STATUS.PREPARED
-        callVmHook(crud, CRUD.HOOK.afterAddError)
-      })
+      crud.crudMethod
+        .add(crud.form)
+        .then(() => {
+          crud.status.add = CRUD.STATUS.NORMAL
+          crud.resetForm()
+          crud.addSuccessNotify()
+          callVmHook(crud, CRUD.HOOK.afterSubmit)
+          crud.toQuery()
+        })
+        .catch(() => {
+          crud.status.add = CRUD.STATUS.PREPARED
+          callVmHook(crud, CRUD.HOOK.afterAddError)
+        })
     },
     /**
      * 执行编辑
@@ -277,17 +265,20 @@ function CRUD(options) {
         return
       }
       crud.status.edit = CRUD.STATUS.PROCESSING
-      crud.crudMethod.edit(crud.form).then(() => {
-        crud.status.edit = CRUD.STATUS.NORMAL
-        crud.getDataStatus(crud.getDataId(crud.form)).edit = CRUD.STATUS.NORMAL
-        crud.editSuccessNotify()
-        crud.resetForm()
-        callVmHook(crud, CRUD.HOOK.afterSubmit)
-        crud.refresh()
-      }).catch(() => {
-        crud.status.edit = CRUD.STATUS.PREPARED
-        callVmHook(crud, CRUD.HOOK.afterEditError)
-      })
+      crud.crudMethod
+        .edit(crud.form)
+        .then(() => {
+          crud.status.edit = CRUD.STATUS.NORMAL
+          crud.getDataStatus(crud.getDataId(crud.form)).edit = CRUD.STATUS.NORMAL
+          crud.editSuccessNotify()
+          crud.resetForm()
+          callVmHook(crud, CRUD.HOOK.afterSubmit)
+          crud.refresh()
+        })
+        .catch(() => {
+          crud.status.edit = CRUD.STATUS.PREPARED
+          callVmHook(crud, CRUD.HOOK.afterEditError)
+        })
     },
     /**
      * 执行删除
@@ -312,71 +303,54 @@ function CRUD(options) {
       if (!delAll) {
         dataStatus.delete = CRUD.STATUS.PROCESSING
       }
-      return crud.crudMethod.del(ids, crud.delParams).then(() => {
-        if (delAll) {
-          crud.delAllLoading = false
-        } else dataStatus.delete = CRUD.STATUS.PREPARED
-        crud.dleChangePage(1)
-        crud.delSuccessNotify()
-        callVmHook(crud, CRUD.HOOK.afterDelete, data)
-        crud.refresh()
-      }).catch(() => {
-        if (delAll) {
-          crud.delAllLoading = false
-        } else dataStatus.delete = CRUD.STATUS.PREPARED
-      })
+      return crud.crudMethod
+        .del(ids)
+        .then(() => {
+          if (delAll) {
+            crud.delAllLoading = false
+          } else dataStatus.delete = CRUD.STATUS.PREPARED
+          crud.dleChangePage(1)
+          crud.delSuccessNotify()
+          callVmHook(crud, CRUD.HOOK.afterDelete, data)
+          crud.refresh()
+        })
+        .catch(() => {
+          if (delAll) {
+            crud.delAllLoading = false
+          } else dataStatus.delete = CRUD.STATUS.PREPARED
+        })
     },
     /**
      * 通用导出
      */
     doExport() {
       crud.downloadLoading = true
-      download(crud.url + '/download', crud.getQueryParams()).then(result => {
-        downloadFile(result, crud.title + '数据', 'xlsx')
-        crud.downloadLoading = false
-      }).catch(() => {
-        crud.downloadLoading = false
-      })
+      download(crud.url + '/download', crud.getQueryParams())
+        .then(result => {
+          downloadFile(result, crud.title + '数据', 'xlsx')
+          crud.downloadLoading = false
+        })
+        .catch(() => {
+          crud.downloadLoading = false
+        })
     },
     /**
      * 获取查询参数
      */
     getQueryParams: function() {
       // 清除参数无值的情况
-      Object.keys(crud.query).length !== 0 && Object.keys(crud.query).forEach(item => {
-        if (crud.query[item] === null || crud.query[item] === '') crud.query[item] = undefined
-      })
-      Object.keys(crud.params).length !== 0 && Object.keys(crud.params).forEach(item => {
-        if (crud.params[item] === null || crud.params[item] === '') crud.params[item] = undefined
-      })
+      Object.keys(crud.query).length !== 0 &&
+        Object.keys(crud.query).forEach(item => {
+          if (crud.query[item] === null || crud.query[item] === '') crud.query[item] = undefined
+        })
+      Object.keys(crud.params).length !== 0 &&
+        Object.keys(crud.params).forEach(item => {
+          if (crud.params[item] === null || crud.params[item] === '') crud.params[item] = undefined
+        })
       return {
-        page: crud.page.page - 1,
-        size: crud.page.size,
-        sort: crud.sort,
         ...crud.query,
         ...crud.params
       }
-    },
-    // 当前页改变
-    pageChangeHandler(e) {
-      crud.page.page = e
-      crud.refresh()
-    },
-    // 每页条数改变
-    sizeChangeHandler(e) {
-      crud.page.size = e
-      crud.page.page = 1
-      crud.refresh()
-    },
-    // 预防删除第二页最后一条数据时，或者多选删除第二页的数据时，页码错误导致请求无数据
-    dleChangePage(size) {
-      if (crud.data.length === size && crud.page.page !== 1) {
-        crud.page.page -= 1
-      }
-    },
-    // 选择改变
-    selectionChangeHandler(val) {
-      crud.selections = val
     },
     /**
      * 重置查询参数
@@ -418,16 +392,11 @@ function CRUD(options) {
      */
     resetDataStatus() {
       const dataStatus = {}
-      function resetStatus(datas) {
-        datas.forEach(e => {
-          dataStatus[crud.getDataId(e)] = {
-            delete: 0,
-            edit: 0
-          }
-          if (e.children) {
-            resetStatus(e.children)
-          }
-        })
+      function resetStatus(data) {
+        dataStatus[crud.getDataId(data)] = {
+          delete: 0,
+          edit: 0
+        }
       }
       resetStatus(crud.data)
       crud.dataStatus = dataStatus
@@ -438,57 +407,6 @@ function CRUD(options) {
      */
     getDataStatus(id) {
       return crud.dataStatus[id]
-    },
-    /**
-     * 用于树形表格多选, 选中所有
-     * @param selection
-     */
-    selectAllChange(selection) {
-      // 如果选中的数目与请求到的数目相同就选中子节点，否则就清空选中
-      if (selection && selection.length === crud.data.length) {
-        selection.forEach(val => {
-          crud.selectChange(selection, val)
-        })
-      } else {
-        crud.getTable().clearSelection()
-      }
-    },
-    /**
-     * 用于树形表格多选，单选的封装
-     * @param selection
-     * @param row
-     */
-    selectChange(selection, row) {
-      // 如果selection中存在row代表是选中，否则是取消选中
-      if (selection.find(val => { return crud.getDataId(val) === crud.getDataId(row) })) {
-        if (row.children) {
-          row.children.forEach(val => {
-            crud.getTable().toggleRowSelection(val, true)
-            selection.push(val)
-            if (val.children) {
-              crud.selectChange(selection, val)
-            }
-          })
-        }
-      } else {
-        crud.toggleRowSelection(selection, row)
-      }
-    },
-    /**
-     * 切换选中状态
-     * @param selection
-     * @param data
-     */
-    toggleRowSelection(selection, data) {
-      if (data.children) {
-        data.children.forEach(val => {
-          selection.splice(selection.findIndex(item => this.getDataId(item) === this.getDataId(val)), 1)
-          crud.getTable().toggleRowSelection(val, false)
-          if (val.children) {
-            crud.toggleRowSelection(selection, val)
-          }
-        })
-      }
     },
     findVM(type) {
       return crud.vms.find(vm => vm && vm.type === type).vm
@@ -505,32 +423,6 @@ function CRUD(options) {
     },
     getDataId(data) {
       return data[this.idField]
-    },
-    getTable() {
-      return this.findVM('presenter').$refs.table
-    },
-    attchTable() {
-      const table = this.getTable()
-      this.updateProp('table', table)
-      const that = this
-      table.$on('expand-change', (row, expanded) => {
-        if (!expanded) {
-          return
-        }
-        const lazyTreeNodeMap = table.store.states.lazyTreeNodeMap
-        row.children = lazyTreeNodeMap[crud.getDataId(row)]
-        if (row.children) {
-          row.children.forEach(ele => {
-            const id = crud.getDataId(ele)
-            if (that.dataStatus[id] === undefined) {
-              that.dataStatus[id] = {
-                delete: 0,
-                edit: 0
-              }
-            }
-          })
-        }
-      })
     }
   }
   const crud = Object.assign({}, data)
@@ -558,7 +450,8 @@ function CRUD(options) {
         this.vms.push(vmObj)
         return
       }
-      if (index < 4) { // 内置预留vm数
+      if (index < 4) {
+        // 内置预留vm数
         this.vms[index] = vmObj
         return
       }
@@ -575,7 +468,8 @@ function CRUD(options) {
           continue
         }
         if (this.vms[i].type === type && this.vms[i].vm === vm) {
-          if (i < 4) { // 内置预留vm数
+          if (i < 4) {
+            // 内置预留vm数
             this.vms[i] = undefined
           } else {
             this.vms.splice(i, 1)
@@ -688,54 +582,7 @@ function presenter(crud) {
         this.$crud[k].unregisterVM('presenter', this)
       }
     },
-    mounted() {
-      // 如果table未实例化（例如使用了v-if），请稍后在适当时机crud.attchTable刷新table信息
-      if (this.$refs.table !== undefined) {
-        this.crud.attchTable()
-      }
-    }
-  }
-}
-
-/**
- * 头部
- */
-function header() {
-  return {
-    data() {
-      return {
-        crud: this.crud,
-        query: this.crud.query
-      }
-    },
-    beforeCreate() {
-      this.crud = lookupCrud(this)
-      this.crud.registerVM('header', this, 1)
-    },
-    destroyed() {
-      this.crud.unregisterVM('header', this)
-    }
-  }
-}
-
-/**
- * 分页
- */
-function pagination() {
-  return {
-    data() {
-      return {
-        crud: this.crud,
-        page: this.crud.page
-      }
-    },
-    beforeCreate() {
-      this.crud = lookupCrud(this)
-      this.crud.registerVM('pagination', this, 2)
-    },
-    destroyed() {
-      this.crud.unregisterVM('pagination', this)
-    }
+    mounted() {}
   }
 }
 
@@ -857,10 +704,4 @@ CRUD.NOTIFICATION_TYPE = {
 
 export default CRUD
 
-export {
-  presenter,
-  header,
-  form,
-  pagination,
-  crud
-}
+export { presenter, form, crud }

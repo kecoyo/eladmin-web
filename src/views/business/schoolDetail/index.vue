@@ -31,8 +31,6 @@ export default {
       activeTab: 'info'
     }
   },
-  computed: {},
-  created() {},
   methods: {
     handleTabClick(tab, event) {
       this.activeTab = tab.name

@@ -67,9 +67,7 @@
       <el-table-column prop="name" label="学校名称" />
       <el-table-column label="所属区域">
         <template slot-scope="scope">
-          <span v-if="allAreasMap.getFullNames">
-            {{ allAreasMap.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
-          </span>
+          {{ allAreasMap?.getFullNames([scope.row.province, scope.row.city, scope.row.county]) }}
         </template>
       </el-table-column>
       <el-table-column label="班级数量">
@@ -100,7 +98,7 @@ import crudOperation from '@crud/CRUD.operation'
 import pagination from '@crud/Pagination'
 import AreaSelect from '@/components/AreaSelect'
 import SchoolModeSelect from '@/components/SchoolModeSelect'
-import { STAGES } from '@/utils/constants'
+import { PHASE_TYPE } from '@/utils/constants'
 
 const defaultForm = { id: null, name: null, area: [], property: 0, idCode: null, schoolModes: [] }
 export default {
@@ -163,7 +161,7 @@ export default {
 
       this.form.property = Number(this.form.property || 0)
 
-      this.form.schoolModes = STAGES.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
+      this.form.schoolModes = PHASE_TYPE.map(item => ({ checked: false, id: item.id, phase: item.phase, year: item.years[0].id }))
     },
     // 提交前
     [CRUD.HOOK.beforeSubmit]() {
