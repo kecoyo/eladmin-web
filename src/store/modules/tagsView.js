@@ -6,9 +6,10 @@ const state = {
 const mutations = {
   ADD_VISITED_VIEW: (state, view) => {
     if (state.visitedViews.some(v => v.path === view.path)) return
+    const title = view.meta.title || 'no-name'
     state.visitedViews.push(
       Object.assign({}, view, {
-        title: view.query?.title || view.meta.title || 'no-name'
+        title: view.query?.title ? title + '：' + view.query.title : title
       })
     )
   },

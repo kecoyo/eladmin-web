@@ -4,7 +4,7 @@
       已选择的学科
     </div>
     <div v-if="crud.data" class="subject-list">
-      <el-tag v-for="item in crud.data" :key="item.subjectId" closable @close="handleDelete(item)">
+      <el-tag v-for="item in crud.data" :key="item.subjectId" size="large" closable @close="handleDelete(item)">
         {{ item.subjectName }}
       </el-tag>
     </div>
@@ -12,7 +12,7 @@
       待加入的学科
     </div>
     <div v-if="noJoinSubjects" class="subject-list">
-      <el-tag v-for="subject in noJoinSubjects" :key="subject.id" type="info">
+      <el-tag v-for="subject in noJoinSubjects" :key="subject.id" size="large" type="info">
         <a style="display: block;" @click="handleAdd(subject)"><i class="el-icon-plus" />&nbsp;&nbsp;{{ subject.name }}</a>
       </el-tag>
     </div>
@@ -47,7 +47,7 @@
 <script>
 import { addSubject, deleteSubject } from '@/api/business/school'
 import { getSubjects } from '@/api/baseInfo'
-import CRUD, { presenter, form, crud } from '@crud/crud2'
+import CRUD, { presenter, form, crud } from '@crud/crudDetail'
 
 const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
 export default {
@@ -124,31 +124,23 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
-.header {
-  font-size: 18px;
-  font-weight: 400;
-  color: #1f2f3d;
-  margin: 20px 0 20px 0;
+.app-container {
+  .header {
+    font-size: 18px;
+    font-weight: 400;
+    color: #1f2f3d;
+    margin: 20px 0 20px 0;
 
-  &:first-child {
-    margin-top: 0px;
+    &:first-child {
+      margin-top: 0px;
+    }
   }
-}
-.subject-list {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.el-tag {
-  height: 32px;
-  line-height: 32px;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-right: 10px;
-  margin-bottom: 10px;
-}
-
-.el-tag + .el-tag {
-  margin-right: 10px;
+  .subject-list {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .el-tag {
+    margin-bottom: 10px;
+  }
 }
 </style>

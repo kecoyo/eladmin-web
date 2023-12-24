@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <h2 class="page-header"><i class="el-icon-school" /> 学校：{{ schoolInfo?.name }}</h2>
+    <div class="page-header"><i class="el-icon-collection" /> 班级：{{ classInfo?.name }}</div>
     <el-tabs v-model="activeTab" type="border-card" @tab-click="handleTabClick">
       <el-tab-pane label="基本信息" name="info">
         <InfoPane />
@@ -8,11 +8,8 @@
       <el-tab-pane label="教师管理" name="teacher">
         <TeacherPane />
       </el-tab-pane>
-      <el-tab-pane label="班级管理" name="class">
-        <ClassPane />
-      </el-tab-pane>
-      <el-tab-pane label="学科管理" name="subject">
-        <SubjectPane />
+      <el-tab-pane label="学生管理" name="class">
+        <StudentPane />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -21,25 +18,24 @@
 <script>
 import InfoPane from './InfoPane'
 import TeacherPane from './TeacherPane'
-import ClassPane from './ClassPane'
-import SubjectPane from './SubjectPane'
+import StudentPane from './StudentPane'
 
 export default {
-  name: 'SchoolDetail',
-  components: { InfoPane, TeacherPane, ClassPane, SubjectPane },
+  name: 'ClassDetail',
+  components: { InfoPane, TeacherPane, StudentPane },
   data() {
     return {
       activeTab: 'info',
-      schoolInfo: null
+      classInfo: null
     }
   },
   mounted() {
-    this.$eventBus.$on('schoolInfoChange', schoolInfo => {
-      this.schoolInfo = schoolInfo
+    this.$eventBus.$on('classInfoChange', classInfo => {
+      this.classInfo = classInfo
     })
   },
   beforeDestroy() {
-    this.$eventBus.$off('schoolInfoChange')
+    this.$eventBus.$off('classInfoChange')
   },
   methods: {
     handleTabClick(tab, event) {

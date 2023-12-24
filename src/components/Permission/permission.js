@@ -15,7 +15,8 @@ export default {
         }
       }
     } else {
-      throw new Error(`使用方式： v-permission="['admin','editor']"`)
+      // throw new Error(`使用方式： v-permission="['admin','editor']"`)
+      el.parentNode && el.parentNode.removeChild(el)
     }
   }
 }

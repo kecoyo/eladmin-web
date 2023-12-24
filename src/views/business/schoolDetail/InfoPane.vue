@@ -35,7 +35,7 @@
         <template slot="label">
           学校类型
         </template>
-        <el-tag v-for="tag in schoolModes" :key="tag.id">
+        <el-tag v-for="tag in schoolModes" :key="tag.id" size="large">
           {{ tag.name }}
         </el-tag>
       </el-descriptions-item>
@@ -76,9 +76,9 @@
 </template>
 
 <script>
-import crudSchool from '@/api/business/school'
+import { updateSchool } from '@/api/business/school'
 import { SCHOOL_PROPERTY, PHASE_TYPE } from '@/utils/constants'
-import CRUD, { presenter, form, crud } from '@crud/crud2'
+import CRUD, { presenter, form, crud } from '@crud/crudDetail'
 import AreaSelect from '@/components/AreaSelect'
 import SchoolModeSelect from '@/components/SchoolModeSelect'
 
@@ -87,7 +87,7 @@ export default {
   name: 'InfoPane',
   components: { AreaSelect, SchoolModeSelect },
   cruds() {
-    return CRUD({ title: '学校', url: 'ljadmin/school/getSchoolInfo', crudMethod: { ...crudSchool } })
+    return CRUD({ title: '学校', url: 'ljadmin/school/getSchoolInfo', crudMethod: { edit: updateSchool } })
   },
   mixins: [presenter(), form(defaultForm), crud()],
   data() {
@@ -120,6 +120,7 @@ export default {
       return this.$store.state.baseInfo.allAreasMap
     }
   },
+  mounted() {},
   methods: {
     // 刷新前做的操作
     [CRUD.HOOK.beforeRefresh](curd) {
@@ -129,10 +130,12 @@ export default {
     // 刷新后做的操作
     [CRUD.HOOK.afterRefresh](curd) {
       this.schoolInfo = curd.data
+      this.$eventBus.$emit('schoolInfoChange', this.schoolInfo)
       const modes = JSON.parse(this.schoolInfo.mode)
       this.schoolModes = Object.keys(modes).map(key => {
-        return { id: key, name: `${PHASE_TYPE.getName(key, ['phase'])} - ${modes[key]}年` }
+        return { id: key, name: `${PHASE_TYPE.getName(key, 'phase')} - ${modes[key]}年` }
       })
+
       return true
     },
     // 编辑前做的操作
@@ -169,27 +172,4 @@ export default {
 }
 </script>
 
-<style rel="stylesheet/scss" lang="scss">
-.pane-container {
-  padding: 20px;
-
-  .descriptions-label {
-    width: 200px;
-  }
-
-  .el-tag + .el-tag {
-    margin-left: 10px;
-  }
-
-  .el-tag {
-    height: 32px;
-    line-height: 32px;
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-}
-
-.pane-footer {
-  padding-top: 20px;
-}
-</style>
+<style rel="stylesheet/scss" lang="scss"></style>

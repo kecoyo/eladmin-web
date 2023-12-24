@@ -111,9 +111,6 @@ export default {
       loading: false,
       area: [],
       permission: {
-        add: ['admin', 'school:add'],
-        edit: ['admin', 'school:edit'],
-        del: ['admin', 'school:del'],
         view: ['admin', 'school:del']
       },
       rules: {

@@ -2,7 +2,16 @@
   <div class="ud-operation">
     <!--左侧插槽-->
     <slot name="left" />
-    <el-button v-permission="permission.edit" :loading="crud.status.cu === 2" :disabled="disabledEdit" size="mini" type="primary" icon="el-icon-edit" @click.stop="crud.toEdit(data)" />
+    <el-button v-permission="permission.view" size="mini" type="info" icon="el-icon-view" @click.stop="crud.toView(data)" />
+    <el-button
+      v-permission="permission.edit"
+      :loading="crud.status.cu === 2"
+      :disabled="disabledEdit"
+      size="mini"
+      type="primary"
+      icon="el-icon-edit"
+      @click.stop="crud.toEdit(data)"
+    />
     <el-popover v-model="pop" v-permission="permission.del" placement="top" width="180" trigger="manual" @show="onPopoverShow" @hide="onPopoverHide">
       <p>{{ msg }}</p>
       <div style="text-align: right; margin: 0">
@@ -16,7 +25,7 @@
   </div>
 </template>
 <script>
-import CRUD, { crud } from '@crud/crud'
+import CRUD, { crud } from '@crud/crud2'
 export default {
   mixins: [crud()],
   props: {
@@ -74,10 +83,9 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.ud-operation{
-  .el-button{
+.ud-operation {
+  .el-button {
     margin-left: 5px;
-
   }
 }
 </style>

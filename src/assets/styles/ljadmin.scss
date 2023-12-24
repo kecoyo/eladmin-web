@@ -1,0 +1,32 @@
+.page-header {
+  font-size: large;
+  font-weight: bold;
+  color: #303133;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+.pane-container {
+  padding: 20px;
+
+  :global(.descriptions-label) {
+    width: 200px;
+  }
+}
+
+.pane-header {
+  font-size: large;
+  color: #1f2f3d;
+}
+
+.pane-footer {
+  padding-top: 20px;
+}
+
+.el-tag {
+  margin-right: 10px;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}

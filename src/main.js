@@ -37,5 +37,8 @@ new Vue({
   el: '#app',
   router,
   store,
+  beforeCreate() {
+    Vue.prototype.$eventBus = this // 安装全局事件总线,此处使是把Vue实例本身挂载到了$eventBus中间件上
+  },
   render: h => h(App)
 })

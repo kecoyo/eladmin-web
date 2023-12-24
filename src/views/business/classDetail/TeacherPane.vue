@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="pane-container">
     <!--工具栏-->
     <div class="head-container">
       <crudOperation :permission="permission">
@@ -13,9 +13,9 @@
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="700px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
-        <el-input v-model="form.userId" type="hidden" />
-        <el-form-item label="教师姓名" prop="userName">
-          <el-input v-model="form.userName" style="width: 75%" />
+        <el-input v-model="form.id" type="hidden" />
+        <el-form-item label="教师姓名" prop="name">
+          <el-input v-model="form.name" style="width: 75%" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" style="width: 75%" />
@@ -38,9 +38,21 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="userId" label="教师ID" width="200" />
-      <el-table-column prop="userName" label="教师名称" width="200" />
+      <el-table-column prop="id" label="教师ID" width="200" />
+      <el-table-column prop="name" label="教师名称" width="200" />
       <el-table-column prop="phone" label="账号" />
+      <el-table-column prop="isClassAdmin" label="班主任" width="100">
+        <template slot-scope="scope">
+          <!-- <el-tag v-if="scope.row.isClassAdmin" type="success">是</el-tag>
+          <el-tag v-else type="danger">否</el-tag> -->
+
+          <el-switch v-if="scope.row.isClassAdmin" :value="scope.row.isClassAdmin" @change="cancelClassAdmin(scope.row)" />
+          <el-switch v-else :value="scope.row.isClassAdmin" @change="setClassAdmin(scope.row)" />
+
+          <!-- <el-button v-if="scope.row.isClassAdmin" type="text" size="small" @click="setClassAdmin(scope.row)">设为</el-button>
+          <el-button v-else type="text" size="small" @click="cancelClassAdmin(scope.row)">取消</el-button> -->
+        </template>
+      </el-table-column>
       <el-table-column label="任教班级">
         <template slot-scope="scope">
           {{ scope.row.cntClass }}
@@ -63,22 +75,21 @@
 </template>
 
 <script>
-import { addTeacher, updateTeacher, deleteTeacher } from '@/api/business/school'
+import { addTeacher, updateTeacher, deleteTeacher, setClassAdmin, cancelClassAdmin } from '@/api/business/class'
 import CRUD, { presenter, header, form, crud } from '@crud/crud2'
 import rrOperation from '@crud/RR.operation2'
 import crudOperation from '@crud/CRUD.operation2'
 import udOperation from '@crud/UD.operation2'
 import pagination from '@crud/Pagination'
 
-const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
+const defaultForm = { id: null, name: null, phone: null, gender: 1, idCard: null }
 export default {
   name: 'TeacherPane',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
     return CRUD({
       title: '教师',
-      idField: 'userId',
-      url: 'ljadmin/school/queryTeacher',
+      url: 'ljadmin/class/queryTeacher',
       delParams: {},
       crudMethod: {
         add: addTeacher,
@@ -90,16 +101,15 @@ export default {
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
-      schoolId: this.$route.params.schoolId,
-      area: [],
+      classId: Number(this.$route.params.classId),
       permission: {
-        add: ['admin', 'school_teacher:add'],
-        edit: ['admin', 'school_teacher:edit'],
-        del: ['admin', 'school_teacher:del'],
-        view: ['admin', 'school_teacher:view']
+        add: ['admin', 'class_teacher:add'],
+        edit: ['admin', 'class_teacher:edit'],
+        del: ['admin', 'class_teacher:del'],
+        view: ['admin', 'class_teacher:view']
       },
       rules: {
-        userName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+        name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
       }
     }
@@ -112,22 +122,23 @@ export default {
     // this.crud.optShow.download = false
   },
   methods: {
+    // 查询前做的操作
     [CRUD.HOOK.beforeRefresh](curd) {
-      curd.query = { ...curd.query, ...this.query, schoolId: this.schoolId }
+      curd.query = { ...curd.query, ...this.query, classId: this.classId }
       return true
     },
     // 新增编辑前做的操作
     [CRUD.HOOK.beforeToCU](crud, form) {
-      this.form.schoolId = this.schoolId
+      this.form.classId = this.classId
       this.form.gender = form.gender || 1
     },
-    // 提交前做的操作
+    // 新增编辑提交前做的操作
     [CRUD.HOOK.beforeSubmit]() {
       return true
     },
     // 删除前做的操作
     [CRUD.HOOK.beforeDelete](crud, data) {
-      crud.delParams = { schoolId: this.schoolId }
+      crud.delParams = { classId: this.classId }
       return true
     },
     // 查看前做的操作
@@ -136,6 +147,34 @@ export default {
         path: '/business/teacher/' + data.id,
         query: { title: data.name }
       })
+    },
+    setClassAdmin(row) {
+      this.$confirm('确认设为班主任？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          setClassAdmin({ classId: this.classId, teacherId: row.id }).then(res => {
+            this.$message.success('设置成功')
+            this.crud.refresh()
+          })
+        })
+        .catch(() => {})
+    },
+    cancelClassAdmin(row) {
+      this.$confirm('确认取消班主任？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(() => {
+          cancelClassAdmin({ classId: this.classId, teacherId: row.id }).then(res => {
+            this.$message.success('取消成功')
+            this.crud.refresh()
+          })
+        })
+        .catch(() => {})
     }
   }
 }

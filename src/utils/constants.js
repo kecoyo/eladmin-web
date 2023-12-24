@@ -1,13 +1,24 @@
-// 给数组扩展几个方法
-const registerFunc = function(arr) {
+// 给列表扩展几个方法
+export const registerFunc = function(arr, idField = 'id', nameField = 'name') {
   // 根据id获取name
-  arr.getName = function(id, keys = ['id', 'name']) {
-    const idKey = keys[0] || 'id'
-    const nameKey = keys[1] || 'name'
-    const item = this.find(item => item[idKey] === id)
+  arr.getName = function(id, idField2, nameField2) {
+    const idKey = idField2 || idField
+    const nameKey = nameField2 || nameField
+    // eslint-disable-next-line eqeqeq
+    const item = this.find(item => item[idKey] == id)
     return item ? item[nameKey] : ''
   }
+
+  return arr
 }
+
+// 性别
+export const GENDER = [
+  { id: 1, name: '男' }, //
+  { id: 2, name: '女' }
+]
+
+registerFunc(GENDER)
 
 // 学校属性
 export const SCHOOL_PROPERTY = [
@@ -29,3 +40,11 @@ export const PHASE_TYPE = [
 ]
 
 registerFunc(PHASE_TYPE)
+
+// 班级性质
+export const CLASS_MODE = [
+  { id: 1, name: '行政班 ' } //
+  // { id: 2, name: '非行政班' }
+]
+
+registerFunc(CLASS_MODE)

@@ -13,12 +13,9 @@
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="700px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
-        <el-input v-model="form.userId" type="hidden" />
-        <el-form-item label="教师姓名" prop="userName">
-          <el-input v-model="form.userName" style="width: 75%" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" style="width: 75%" />
+        <el-input v-model="form.classId" type="hidden" />
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="form.name" style="width: 75%" />
         </el-form-item>
         <el-form-item label="性别" prop="gender">
           <el-radio-group v-model="form.gender" style="width: 75%">
@@ -26,8 +23,18 @@
             <el-radio :label="2">女</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="身份证号" prop="idCard">
-          <el-input v-model="form.idCard" style="width: 75%" />
+        <el-form-item label="学籍号" prop="studentCode">
+          <el-input v-model="form.studentCode" style="width: 75%" />
+        </el-form-item>
+        <el-divider content-position="left">家长信息</el-divider>
+        <el-form-item label="母亲手机号" prop="momPhone">
+          <el-input v-model="form.momPhone" style="width: 75%" />
+        </el-form-item>
+        <el-form-item label="父亲手机号" prop="dadPhone">
+          <el-input v-model="form.dadPhone" style="width: 75%" />
+        </el-form-item>
+        <el-form-item label="监护人" prop="otherPhone">
+          <el-input v-model="form.otherPhone" style="width: 75%" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -38,69 +45,64 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="userId" label="教师ID" width="200" />
-      <el-table-column prop="userName" label="教师名称" width="200" />
+      <el-table-column prop="id" label="学生ID" width="90" />
+      <el-table-column prop="name" label="学生姓名" />
       <el-table-column prop="phone" label="账号" />
-      <el-table-column label="任教班级">
-        <template slot-scope="scope">
-          {{ scope.row.cntClass }}
-        </template>
-      </el-table-column>
-      <el-table-column label="最后登录时间">
-        <template slot-scope="scope">
-          {{ scope.row.loginTime }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="faceImg" label="人脸照片" />
       <el-table-column v-if="checkPer(['admin', 'school:edit', 'school:del'])" label="操作" width="200px" align="center">
         <template slot-scope="scope">
           <udOperation :data="scope.row" :permission="permission" />
         </template>
       </el-table-column>
     </el-table>
-    <!--分页组件-->
-    <pagination />
   </div>
 </template>
 
 <script>
-import { addTeacher, updateTeacher, deleteTeacher } from '@/api/business/school'
+import { addStudent, updateStudent, deleteStudent } from '@/api/business/class'
 import CRUD, { presenter, header, form, crud } from '@crud/crud2'
 import rrOperation from '@crud/RR.operation2'
 import crudOperation from '@crud/CRUD.operation2'
 import udOperation from '@crud/UD.operation2'
-import pagination from '@crud/Pagination'
+import { CLASS_MODE, GENDER } from '@/utils/constants'
 
-const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
+const defaultForm = { classId: null, name: null, studentCode: null, gender: null, momPhone: null, dadPhone: null, otherPhone: null }
 export default {
-  name: 'TeacherPane',
-  components: { pagination, crudOperation, rrOperation, udOperation },
+  name: 'StudentPane',
+  components: { crudOperation, rrOperation, udOperation },
   cruds() {
     return CRUD({
-      title: '教师',
-      idField: 'userId',
-      url: 'ljadmin/school/queryTeacher',
-      delParams: {},
+      title: '学生',
+      url: 'ljadmin/class/queryStudent',
       crudMethod: {
-        add: addTeacher,
-        edit: updateTeacher,
-        del: deleteTeacher
+        add: addStudent,
+        edit: updateStudent,
+        del: deleteStudent
       }
     })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
+  props: {
+    mode: { type: String, default: undefined }
+  },
   data() {
     return {
-      schoolId: this.$route.params.schoolId,
-      area: [],
+      classId: this.$route.params.classId,
+      schoolGrades: [],
+      classModes: CLASS_MODE,
       permission: {
-        add: ['admin', 'school_teacher:add'],
-        edit: ['admin', 'school_teacher:edit'],
-        del: ['admin', 'school_teacher:del'],
-        view: ['admin', 'school_teacher:view']
+        add: ['admin', 'class_student:add'],
+        edit: ['admin', 'class_student:edit'],
+        del: ['admin', 'class_student:del'],
+        view: ['admin', 'class_student:view']
       },
       rules: {
-        userName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-        phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
+        name: [
+          { required: true, message: '请输入学生姓名', trigger: 'change' }, //
+          { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'change' }
+        ],
+        mode: [{ required: true, message: '请选择班级性质', trigger: 'blur' }],
+        gradeLevel: [{ required: true, message: '请选择年级', trigger: 'blur' }]
       }
     }
   },
@@ -113,29 +115,29 @@ export default {
   },
   methods: {
     [CRUD.HOOK.beforeRefresh](curd) {
-      curd.query = { ...curd.query, ...this.query, schoolId: this.schoolId }
+      curd.query = { ...curd.query, ...this.query, classId: this.classId }
       return true
     },
     // 新增编辑前做的操作
     [CRUD.HOOK.beforeToCU](crud, form) {
-      this.form.schoolId = this.schoolId
-      this.form.gender = form.gender || 1
+      this.form.classId = this.classId
+      this.form.gender = Number(this.form.gender || GENDER[0].id)
     },
-    // 提交前做的操作
+    // 提交前
     [CRUD.HOOK.beforeSubmit]() {
       return true
     },
-    // 删除前做的操作
     [CRUD.HOOK.beforeDelete](crud, data) {
-      crud.delParams = { schoolId: this.schoolId }
+      crud.delParams = { classId: this.classId }
       return true
     },
     // 查看前做的操作
     [CRUD.HOOK.beforeToView](crud, data) {
       this.$router.push({
-        path: '/business/teacher/' + data.id,
+        path: '/business/student/' + data.id,
         query: { title: data.name }
       })
+      return false
     }
   }
 }

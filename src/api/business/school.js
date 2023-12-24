@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-export function add(data) {
+export function addSchool(data) {
   return request({
     url: 'ljadmin/school/addSchool',
     method: 'post',
@@ -8,7 +8,7 @@ export function add(data) {
   })
 }
 
-export function edit(data) {
+export function updateSchool(data) {
   return request({
     url: 'ljadmin/school/updateSchool',
     method: 'post',
@@ -16,7 +16,7 @@ export function edit(data) {
   })
 }
 
-export function del(ids) {
+export function deleteSchool(ids) {
   return request({
     url: 'ljadmin/school/deleteSchool',
     method: 'post',
@@ -83,4 +83,37 @@ export function deleteSubject(data) {
   })
 }
 
-export default { add, edit, del }
+export function getSchoolGrades(schoolId) {
+  return request({
+    url: 'ljadmin/class/getSchoolGrades',
+    method: 'get',
+    params: { schoolId }
+  })
+}
+
+export function addClass(data) {
+  return request({
+    url: 'ljadmin/class/addClass',
+    method: 'post',
+    data
+  })
+}
+
+export function updateClass(data) {
+  return request({
+    url: 'ljadmin/class/updateClass',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteClass(ids, delParams) {
+  return request({
+    url: 'ljadmin/class/deleteClass',
+    method: 'post',
+    data: {
+      ...delParams,
+      ids
+    }
+  })
+}
