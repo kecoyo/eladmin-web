@@ -38,7 +38,7 @@
         教师: {{ classInfo.cntTeacher }} 人，学生: {{ classInfo.cntStudent }} 人，家长: {{ classInfo.cntParent }} 人
       </el-descriptions-item>
     </el-descriptions>
-    <div class="pane-footer">
+    <div v-permission="permission.edit" class="pane-footer">
       <el-button type="primary" size="small" icon="el-icon-edit" @click.stop="crud.toEdit(classInfo)">修改</el-button>
     </div>
     <!--表单组件-->
@@ -87,6 +87,9 @@ export default {
       classInfo: null,
       schoolGrades: registerFunc([]),
       classModes: CLASS_MODE,
+      permission: {
+        edit: ['admin', 'class:edit']
+      },
       rules: {
         mode: [{ required: true, message: '请选择班级性质', trigger: 'blur' }],
         gradeLevel: [{ required: true, message: '请选择年级', trigger: 'blur' }],

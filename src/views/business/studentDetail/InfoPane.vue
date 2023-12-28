@@ -44,7 +44,7 @@
         {{ studentInfo.email || '-' }}
       </el-descriptions-item>
     </el-descriptions>
-    <div class="pane-footer">
+    <div v-permission="permission.edit" class="pane-footer">
       <el-button type="primary" size="small" icon="el-icon-edit" @click.stop="crud.toEdit(studentInfo)">修改</el-button>
     </div>
     <!--表单组件-->
@@ -96,6 +96,9 @@ export default {
       studentInfo: null,
       defaultFaceImg: 'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg',
       GENDER,
+      permission: {
+        edit: ['admin', 'student:edit']
+      },
       rules: {
         name: [{ required: true, message: '请输入学生名称', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],

@@ -8,4 +8,20 @@ export function edit(data) {
   })
 }
 
-export default { edit }
+export function unbindDevice(data) {
+  return request({
+    url: 'ljadmin/device/unbindDevice',
+    method: 'post',
+    data
+  })
+}
+
+export function rebindDevice(data) {
+  return request({
+    url: 'ljadmin/device/rebindDevice',
+    method: 'post',
+    data
+  })
+}
+
+export default { edit, unbindDevice, rebindDevice }

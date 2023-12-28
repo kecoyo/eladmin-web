@@ -21,9 +21,9 @@ export function getDeviceModels() {
   })
 }
 
-export function getSubjects() {
+export function getAllSubjects() {
   return request({
-    url: 'ljadmin/baseInfo/subjects',
+    url: 'ljadmin/baseInfo/getAllSubjects',
     method: 'get'
   })
 }

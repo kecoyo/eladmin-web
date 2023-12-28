@@ -13,9 +13,9 @@
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="700px">
       <el-form ref="form" :model="form" :rules="rules" size="small" label-width="150px">
-        <el-input v-model="form.userId" type="hidden" />
-        <el-form-item label="教师姓名" prop="userName">
-          <el-input v-model="form.userName" style="width: 75%" />
+        <el-input v-model="form.id" type="hidden" />
+        <el-form-item label="教师姓名" prop="name">
+          <el-input v-model="form.name" style="width: 75%" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" style="width: 75%" />
@@ -38,8 +38,8 @@
     <!--表格渲染-->
     <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%" @selection-change="crud.selectionChangeHandler">
       <el-table-column type="selection" width="55" />
-      <el-table-column prop="userId" label="教师ID" width="200" />
-      <el-table-column prop="userName" label="教师名称" width="200" />
+      <el-table-column prop="id" label="教师ID" width="200" />
+      <el-table-column prop="name" label="教师名称" width="200" />
       <el-table-column prop="phone" label="账号" />
       <el-table-column label="任教班级">
         <template slot-scope="scope">
@@ -70,14 +70,13 @@ import crudOperation from '@crud/CRUD.operation2'
 import udOperation from '@crud/UD.operation2'
 import pagination from '@crud/Pagination'
 
-const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
+const defaultForm = { id: null, name: null, gender: 1, idCard: null, phone: null }
 export default {
   name: 'TeacherPane',
   components: { pagination, crudOperation, rrOperation, udOperation },
   cruds() {
     return CRUD({
       title: '教师',
-      idField: 'userId',
       url: 'ljadmin/school/queryTeacher',
       delParams: {},
       crudMethod: {
@@ -99,7 +98,7 @@ export default {
         view: ['admin', 'school_teacher:view']
       },
       rules: {
-        userName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+        name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
       }
     }

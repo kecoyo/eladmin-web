@@ -24,9 +24,9 @@ export function deleteSchool(ids) {
   })
 }
 
-export function getSchoolExtendStat(params) {
+export function getSchoolStat(params) {
   return request({
-    url: 'ljadmin/school/getSchoolExtendStat',
+    url: 'ljadmin/school/getSchoolStat',
     method: 'get',
     params
   })
@@ -85,15 +85,15 @@ export function deleteSubject(data) {
 
 export function getSchoolGrades(schoolId) {
   return request({
-    url: 'ljadmin/class/getSchoolGrades',
+    url: 'ljadmin/school/getSchoolGrades',
     method: 'get',
-    params: { schoolId }
+    params: { id: schoolId }
   })
 }
 
 export function addClass(data) {
   return request({
-    url: 'ljadmin/class/addClass',
+    url: 'ljadmin/school/addClass',
     method: 'post',
     data
   })
@@ -101,7 +101,7 @@ export function addClass(data) {
 
 export function updateClass(data) {
   return request({
-    url: 'ljadmin/class/updateClass',
+    url: 'ljadmin/school/updateClass',
     method: 'post',
     data
   })
@@ -109,7 +109,7 @@ export function updateClass(data) {
 
 export function deleteClass(ids, delParams) {
   return request({
-    url: 'ljadmin/class/deleteClass',
+    url: 'ljadmin/school/deleteClass',
     method: 'post',
     data: {
       ...delParams,

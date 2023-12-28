@@ -20,18 +20,18 @@ export default {
   },
   computed: {
     userAreas() {
-      const allAreas = this.$store.state.baseInfo.allAreas
+      // const allAreas = this.$store.state.baseInfo.allAreas
       const allAreasMap = this.$store.state.baseInfo.allAreasMap
       const oldUserAreas = this.$store.state.user.user.userAreas
-      const dataScope = this.$store.state.user.user.roles[0].dataScope
+      // const dataScope = this.$store.state.user.user.roles[0].dataScope
 
       if (Object.keys(allAreasMap).length === 0) {
         return []
       }
 
-      if (dataScope === '全部') {
-        return allAreas
-      }
+      // if (dataScope === '全部') {
+      //   return allAreas
+      // }
 
       const userAreas = []
       const userAreasMap = {}

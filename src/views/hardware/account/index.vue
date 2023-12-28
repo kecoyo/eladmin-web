@@ -4,7 +4,7 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <single-area-select v-model="area" clearable placeholder="请选择区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
+        <area-select v-model="area" check-strictly clearable placeholder="请选择区域" style="width: 250px" class="filter-item" @change="crud.toQuery" />
         <el-input v-model="query.blurry" clearable size="small" placeholder="输入名称或者手机号" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <el-select v-model="query.enabled" clearable size="small" placeholder="状态" class="filter-item" style="width: 90px" @change="crud.toQuery">
           <el-option v-for="item in enabledTypeOptions" :key="item.key" :label="item.display_name" :value="item.key" />
@@ -14,7 +14,7 @@
       <crudOperation show="" :permission="permission">
         <el-button
           slot="right"
-          v-permission="['admin','user:add']"
+          v-permission="['admin', 'user:add']"
           :disabled="crud.selections.length === 0"
           class="filter-item"
           size="mini"
@@ -38,13 +38,7 @@
           <el-input v-model="form.nickName" @keydown.native="keydown($event)" />
         </el-form-item>
         <el-form-item label="部门" prop="dept.id">
-          <treeselect
-            v-model="form.dept.id"
-            :options="depts"
-            :load-options="loadDepts"
-            style="width: 183px"
-            placeholder="选择部门"
-          />
+          <treeselect v-model="form.dept.id" :options="depts" :load-options="loadDepts" style="width: 183px" placeholder="选择部门" />
         </el-form-item>
         <el-form-item label="性别">
           <el-radio-group v-model="form.gender" style="width: 178px">
@@ -54,32 +48,16 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.enabled" :disabled="form.id === user.id">
-            <el-radio
-              v-for="item in dict.user_status"
-              :key="item.id"
-              :label="item.value"
-            >{{ item.label }}</el-radio>
+            <el-radio v-for="item in dict.user_status" :key="item.id" :label="item.value">{{ item.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="角色" prop="role">
-          <el-select
-            v-model="form.role"
-            style="width: 467px"
-            placeholder="请选择"
-            @remove-tag="deleteTag"
-            @change="changeRole"
-          >
-            <el-option
-              v-for="item in roles"
-              :key="item.name"
-              :disabled="level !== 1 && item.level <= level"
-              :label="item.name"
-              :value="item.id"
-            />
+          <el-select v-model="form.role" style="width: 467px" placeholder="请选择" @remove-tag="deleteTag" @change="changeRole">
+            <el-option v-for="item in roles" :key="item.name" :disabled="level !== 1 && item.level <= level" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item style="margin-bottom: 0;" label="管理区域" prop="userAreaData">
-          <area-select v-model="form.userAreaData" style="width: 467px" />
+          <area-select v-model="form.userAreaData" multiple check-strictly style="width: 467px" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -112,19 +90,9 @@
         </template>
       </el-table-column>
       <el-table-column :show-overflow-tooltip="true" prop="createTime" width="135" label="创建日期" />
-      <el-table-column
-        v-if="checkPer(['admin','user:edit','user:del'])"
-        label="操作"
-        width="115"
-        align="center"
-        fixed="right"
-      >
+      <el-table-column v-if="checkPer(['admin', 'account:edit', 'account:del'])" label="操作" align="center" fixed="right">
         <template slot-scope="scope">
-          <udOperation
-            :data="scope.row"
-            :permission="permission"
-            :disabled-dle="scope.row.id === user.id"
-          />
+          <udOperation :data="scope.row" :permission="permission" :disabled-dle="scope.row.id === user.id" />
         </template>
       </el-table-column>
     </el-table>
@@ -149,13 +117,24 @@ import { mapGetters } from 'vuex'
 import '@riophae/vue-treeselect/dist/vue-treeselect.css'
 import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
 
-const defaultForm = { id: null, username: null, nickName: null, gender: '男', enabled: 'false', role: null, roles: [], dept: { id: null }, phone: null,
-  userAreas: [], userAreaData: [] }
+const defaultForm = {
+  id: null,
+  username: null,
+  nickName: null,
+  gender: '男',
+  enabled: 'false',
+  role: null,
+  roles: [],
+  dept: { id: null },
+  phone: null,
+  userAreas: [],
+  userAreaData: []
+}
 export default {
   name: 'User',
   components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, AreaSelect },
   cruds() {
-    return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
+    return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser } })
   },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   // 数据字典
@@ -173,47 +152,32 @@ export default {
     }
     return {
       height: document.documentElement.clientHeight - 180 + 'px;',
-      deptName: '', depts: [], deptDatas: [], level: 3, roles: [],
+      deptName: '',
+      depts: [],
+      deptDatas: [],
+      level: 3,
+      roles: [],
       area: [],
       defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
       areaProps: { value: 'id', label: 'name', children: 'children', multiple: true, checkStrictly: true },
       permission: {
-        add: ['admin', 'user:add'],
-        edit: ['admin', 'user:edit'],
-        del: ['admin', 'user:del']
+        add: ['admin', 'account:add'],
+        edit: ['admin', 'account:edit'],
+        del: ['admin', 'account:del']
       },
-      enabledTypeOptions: [
-        { key: 'true', display_name: '激活' },
-        { key: 'false', display_name: '锁定' }
-      ],
+      enabledTypeOptions: [{ key: 'true', display_name: '激活' }, { key: 'false', display_name: '锁定' }],
       rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-        ],
-        nickName: [
-          { required: true, message: '请输入姓名', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-        ],
-        phone: [
-          { required: true, trigger: 'blur', validator: validPhone }
-        ],
-        'dept.id': [
-          { required: true, message: '请选择部门', trigger: 'blur' }
-        ],
-        'role': [
-          { required: true, message: '请选择角色', trigger: 'blur' }
-        ],
-        'userAreaData': [
-          { required: true, message: '请选择区域', trigger: 'blur' }
-        ]
+        username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }],
+        nickName: [{ required: true, message: '请输入姓名', trigger: 'blur' }, { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }],
+        phone: [{ required: true, trigger: 'blur', validator: validPhone }],
+        'dept.id': [{ required: true, message: '请选择部门', trigger: 'blur' }],
+        role: [{ required: true, message: '请选择角色', trigger: 'blur' }],
+        userAreaData: [{ required: true, message: '请选择区域', trigger: 'blur' }]
       }
     }
   },
   computed: {
-    ...mapGetters([
-      'user'
-    ]),
+    ...mapGetters(['user']),
     allAreas() {
       return this.$store.state.baseInfo.allAreas
     }
@@ -234,10 +198,8 @@ export default {
         e.returnValue = false
       }
     },
-    changeRole(value) {
-    },
-    deleteTag(value) {
-    },
+    changeRole(value) {},
+    deleteTag(value) {},
     [CRUD.HOOK.beforeRefresh](curd) {
       const [province, city, county] = this.area
       curd.query = { ...curd.query, ...this.query, province, city, county }
@@ -255,8 +217,7 @@ export default {
       form.enabled = form.enabled.toString()
     },
     // 新增前将多选的值设置为空
-    [CRUD.HOOK.beforeToAdd]() {
-    },
+    [CRUD.HOOK.beforeToAdd]() {},
     // 初始化编辑时候的角色与岗位
     [CRUD.HOOK.beforeToEdit](crud, form) {
       // 初始化角色
@@ -370,27 +331,36 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        crudUser.edit(data).then(res => {
-          this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
-        }).catch(() => {
+      })
+        .then(() => {
+          crudUser
+            .edit(data)
+            .then(res => {
+              this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
+            })
+            .catch(() => {
+              data.enabled = !data.enabled
+            })
+        })
+        .catch(() => {
           data.enabled = !data.enabled
         })
-      }).catch(() => {
-        data.enabled = !data.enabled
-      })
     },
     // 获取弹窗内角色数据
     getRoles() {
-      getAll().then(res => {
-        this.roles = res
-      }).catch(() => { })
+      getAll()
+        .then(res => {
+          this.roles = res
+        })
+        .catch(() => {})
     },
     // 获取权限级别
     getRoleLevel() {
-      getLevel().then(res => {
-        this.level = res.level
-      }).catch(() => { })
+      getLevel()
+        .then(res => {
+          this.level = res.level
+        })
+        .catch(() => {})
     },
     checkboxT(row, rowIndex) {
       return row.id !== this.user.id
@@ -400,25 +370,31 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        const ids = []
-        datas.forEach(val => {
-          ids.push(val.id)
-        })
-        console.log(ids)
-        crudUser.resetPwd(ids).then(() => {
-          this.crud.notify('重置成功, 用户新密码:123456', CRUD.NOTIFICATION_TYPE.SUCCESS)
-        }).catch(() => {})
-      }).catch(() => {
       })
+        .then(() => {
+          const ids = []
+          datas.forEach(val => {
+            ids.push(val.id)
+          })
+          console.log(ids)
+          crudUser
+            .resetPwd(ids)
+            .then(() => {
+              this.crud.notify('重置成功, 用户新密码:123456', CRUD.NOTIFICATION_TYPE.SUCCESS)
+            })
+            .catch(() => {})
+        })
+        .catch(() => {})
     }
   }
 }
 </script>
 
 <style rel="stylesheet/scss" lang="scss" scoped>
-  ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
-    height: 30px;
-    line-height: 30px;
-  }
+::v-deep .vue-treeselect__control,
+::v-deep .vue-treeselect__placeholder,
+::v-deep .vue-treeselect__single-value {
+  height: 30px;
+  line-height: 30px;
+}
 </style>

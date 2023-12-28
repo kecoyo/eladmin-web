@@ -4,14 +4,14 @@
       已选择的学科
     </div>
     <div v-if="crud.data" class="subject-list">
-      <el-tag v-for="item in crud.data" :key="item.subjectId" size="large" closable @close="handleDelete(item)">
-        {{ item.subjectName }}
+      <el-tag v-for="item in crud.data" :key="item.id" size="large" :closable="checkPer(permission.del)" @close="handleDelete(item)">
+        {{ item.name }}
       </el-tag>
     </div>
-    <div class="header">
+    <div v-if="noJoinSubjects && checkPer(permission.add)" class="header">
       待加入的学科
     </div>
-    <div v-if="noJoinSubjects" class="subject-list">
+    <div v-if="noJoinSubjects && checkPer(permission.add)" class="subject-list">
       <el-tag v-for="subject in noJoinSubjects" :key="subject.id" size="large" type="info">
         <a style="display: block;" @click="handleAdd(subject)"><i class="el-icon-plus" />&nbsp;&nbsp;{{ subject.name }}</a>
       </el-tag>
@@ -46,7 +46,7 @@
 
 <script>
 import { addSubject, deleteSubject } from '@/api/business/school'
-import { getSubjects } from '@/api/baseInfo'
+import { getAllSubjects } from '@/api/baseInfo'
 import CRUD, { presenter, form, crud } from '@crud/crudDetail'
 
 const defaultForm = { userId: null, userName: null, gender: 1, idCard: null, phone: null }
@@ -62,6 +62,10 @@ export default {
       schoolId: this.$route.params.schoolId,
       allSubjects: [],
       noJoinSubjects: [],
+      permission: {
+        add: ['admin', 'school_subject:add'],
+        del: ['admin', 'school_subject:del']
+      },
       rules: {
         userName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
@@ -92,7 +96,7 @@ export default {
     },
     // 获取所有学科
     getAllSubjects() {
-      getSubjects().then(res => {
+      getAllSubjects().then(res => {
         this.allSubjects = res
         this.refreshNoJoinSubjects()
       })
@@ -101,13 +105,13 @@ export default {
     refreshNoJoinSubjects() {
       if (this.crud.data?.length > 0) {
         this.noJoinSubjects = this.allSubjects.filter(item => {
-          return !this.crud.data.some(subject => subject.subjectId === item.id)
+          return !this.crud.data.some(subject => subject.id === item.id)
         })
       }
     },
     // 删除学校学科
     handleDelete(item) {
-      deleteSubject({ schoolId: this.schoolId, subjectId: item.subjectId }).then(res => {
+      deleteSubject({ schoolId: this.schoolId, subjectId: item.id }).then(res => {
         this.crud.delSuccessNotify()
         this.crud.refresh()
       })

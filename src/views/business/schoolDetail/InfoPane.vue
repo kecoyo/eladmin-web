@@ -40,7 +40,7 @@
         </el-tag>
       </el-descriptions-item>
     </el-descriptions>
-    <div class="pane-footer">
+    <div v-permission="permission.edit" class="pane-footer">
       <el-button type="primary" size="small" icon="el-icon-edit" @click.stop="crud.toEdit(schoolInfo)">修改</el-button>
     </div>
     <!--表单组件-->
@@ -96,6 +96,9 @@ export default {
       schoolInfo: null,
       schoolModes: [],
       schoolPropertyList: SCHOOL_PROPERTY,
+      permission: {
+        edit: ['admin', 'school:edit']
+      },
       rules: {
         name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
         area: [{ required: true, message: '请选择区域', trigger: 'blur' }],

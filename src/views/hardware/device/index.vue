@@ -82,18 +82,22 @@
         <template slot-scope="scope">
           <el-tag v-if="[1, 2].includes(scope.row.deviceStatus)" type="success">已绑定</el-tag>
           <el-tag v-else type="info">未绑定</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="150px" align="center">
-        <template slot-scope="scope">
+
           <!-- <el-button type="text" style="margin-left: -1px" size="mini" @click="toGen(scope.row.tableName)">重启</el-button>
           <el-button type="text" style="margin-left: -1px" size="mini" @click="toGen(scope.row.tableName)">刷新</el-button> -->
 
           <!-- deviceStatus: 3-未绑定，其它-未绑定 -->
-          <el-button v-if="scope.row.deviceStatus === 3" type="text" size="mini" style="margin-left: -1px">恢复</el-button>
-          <el-button v-else type="text" size="mini" style="margin-left: -1px">解绑</el-button>
-
-          <el-button :loading="crud.status.cu === 2" type="text" size="mini" style="margin-left: -1px" @click.stop="crud.toEdit(scope.row)">编辑</el-button>
+          <el-button v-if="scope.row.deviceStatus === 3" v-permission="permission.rebind" type="text" size="mini" style="margin-left: -1px" @click="rebind(scope.row)">
+            恢复
+          </el-button>
+          <el-button v-else v-permission="permission.unbind" type="text" size="mini" style="margin-left: -1px" @click="unbind(scope.row)">
+            解绑
+          </el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150px" align="center">
+        <template v-if="checkPer(['admin', 'device:edit', 'device:del'])" slot-scope="scope">
+          <udOperation :data="scope.row" :permission="permission" />
         </template>
       </el-table-column>
     </el-table>
@@ -103,10 +107,11 @@
 </template>
 
 <script>
-import crudDevice from '@/api/hardware/device'
-import CRUD, { presenter, header, form, crud } from '@crud/crud'
-import rrOperation from '@crud/RR.operation'
-import crudOperation from '@crud/CRUD.operation'
+import crudDevice, { unbindDevice, rebindDevice } from '@/api/hardware/device'
+import CRUD, { presenter, header, form, crud } from '@crud/crud2'
+import rrOperation from '@crud/RR.operation2'
+import crudOperation from '@crud/CRUD.operation2'
+import udOperation from '@crud/UD.operation2'
 import pagination from '@crud/Pagination'
 import AreaSelect from '@/components/AreaSelect'
 import DeviceTypeSelect from '@/components/DeviceTypeSelect'
@@ -115,7 +120,7 @@ import DeviceModelSelect from '@/components/DeviceModelSelect'
 const defaultForm = { id: null, name: null, ip: null, port: 22, account: 'root', password: null }
 export default {
   name: 'Device',
-  components: { pagination, crudOperation, rrOperation, AreaSelect, DeviceTypeSelect, DeviceModelSelect },
+  components: { pagination, crudOperation, rrOperation, udOperation, AreaSelect, DeviceTypeSelect, DeviceModelSelect },
   cruds() {
     return CRUD({ title: '设备', url: 'ljadmin/device', crudMethod: { ...crudDevice } })
   },
@@ -125,9 +130,9 @@ export default {
       area: [], // 区域
       loading: false,
       permission: {
-        add: ['admin', 'device:add'],
         edit: ['admin', 'device:edit'],
-        del: ['admin', 'device:del']
+        unbind: ['admin', 'device:unbind'],
+        rebind: ['admin', 'device:rebind']
       },
       rules: {
         deviceName: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
@@ -145,10 +150,10 @@ export default {
     }
   },
   mounted() {
-    this.crud.optShow.add = false
-    this.crud.optShow.edit = false
-    this.crud.optShow.del = false
-    this.crud.optShow.download = false
+    // this.crud.optShow.add = false
+    // this.crud.optShow.edit = false
+    // this.crud.optShow.del = false
+    // this.crud.optShow.download = false
   },
   methods: {
     [CRUD.HOOK.beforeRefresh](curd) {
@@ -180,6 +185,24 @@ export default {
       this.form.deviceModeID = this.form.deviceModels[2]
       delete this.form.deviceModels
       return true
+    },
+    // 解绑
+    unbind(row) {
+      this.$confirm('确定解绑该设备吗？', '提示', { type: 'warning' }).then(() => {
+        unbindDevice({ schoolId: row.schoolId, deviceId: row.id, uuid: row.uuid }).then(() => {
+          this.$message.success('解绑成功')
+          this.crud.refresh()
+        })
+      })
+    },
+    // 恢复
+    rebind(row) {
+      this.$confirm('确定恢复该设备吗？', '提示', { type: 'warning' }).then(() => {
+        rebindDevice({ schoolId: row.schoolId, deviceId: row.id, uuid: row.uuid }).then(() => {
+          this.$message.success('恢复成功')
+          this.crud.refresh()
+        })
+      })
     }
   }
 }

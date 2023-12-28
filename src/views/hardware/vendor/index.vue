@@ -54,10 +54,10 @@
 
 <script>
 import crudVendor from '@/api/hardware/vendor'
-import CRUD, { presenter, header, form, crud } from '@crud/crud'
-import rrOperation from '@crud/RR.operation'
-import crudOperation from '@crud/CRUD.operation'
-import udOperation from '@crud/UD.operation'
+import CRUD, { presenter, header, form, crud } from '@crud/crud2'
+import rrOperation from '@crud/RR.operation2'
+import crudOperation from '@crud/CRUD.operation2'
+import udOperation from '@crud/UD.operation2'
 import AreaSelect from '@/components/AreaSelect'
 
 const defaultForm = { id: null, name: null, province: null, city: null, county: null, area: null, liaison: null, phone: null }

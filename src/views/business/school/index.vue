@@ -88,7 +88,7 @@
 </template>
 
 <script>
-import { getSchoolExtendStat, addSchool, updateSchool, deleteSchool } from '@/api/business/school'
+import { getSchoolStat, addSchool, updateSchool, deleteSchool } from '@/api/business/school'
 import CRUD, { presenter, header, form, crud } from '@crud/crud2'
 import rrOperation from '@crud/RR.operation2'
 import crudOperation from '@crud/CRUD.operation2'
@@ -112,9 +112,9 @@ export default {
       area: [],
       permission: {
         add: ['admin', 'school:add'],
-        edit: ['admin', 'school:edit'],
+        edit: ['hidden'],
         del: ['admin', 'school:del'],
-        view: ['admin', 'school:del']
+        view: ['admin', 'school:view']
       },
       rules: {
         name: [{ required: true, message: '请输入学校名称', trigger: 'blur' }],
@@ -159,7 +159,7 @@ export default {
       curd.query = { ...curd.query, ...this.query, province, city, county }
 
       //  获取学校扩展信息
-      this.getSchoolExtendStat(curd.query)
+      this.getSchoolStat(curd.query)
 
       return true
     },
@@ -200,8 +200,8 @@ export default {
         query: { title: data.name }
       })
     },
-    getSchoolExtendStat(params) {
-      getSchoolExtendStat(params).then(res => {
+    getSchoolStat(params) {
+      getSchoolStat(params).then(res => {
         this.schoolStat = res
       })
     }

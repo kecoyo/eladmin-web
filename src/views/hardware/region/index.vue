@@ -41,7 +41,7 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="checkPer(['admin', 'schoolCard:edit', 'schoolCard:del'])" label="操作" width="150px" align="center">
+      <el-table-column v-if="checkPer(['admin', 'school_card:edit', 'school_card:del'])" label="操作" width="150px" align="center">
         <template slot-scope="scope">
           <udOperation :data="scope.row" :permission="permission" />
         </template>
@@ -54,10 +54,10 @@
 
 <script>
 import crudSchoolCard from '@/api/hardware/schoolCard'
-import CRUD, { presenter, header, form, crud } from '@crud/crud'
-import rrOperation from '@crud/RR.operation'
-import crudOperation from '@crud/CRUD.operation'
-import udOperation from '@crud/UD.operation'
+import CRUD, { presenter, header, form, crud } from '@crud/crud2'
+import rrOperation from '@crud/RR.operation2'
+import crudOperation from '@crud/CRUD.operation2'
+import udOperation from '@crud/UD.operation2'
 import pagination from '@crud/Pagination'
 import AreaSelect from '@/components/AreaSelect'
 
@@ -74,9 +74,8 @@ export default {
       loading: false,
       area: [],
       permission: {
-        // add: ['admin', 'schoolCard:add'],
-        edit: ['admin', 'schoolCard:edit'],
-        del: ['admin', 'schoolCard:del']
+        edit: ['admin', 'school_card:edit'],
+        del: ['admin', 'school_card:del']
       },
       rules: {
         expectCard: [{ required: true, message: '请输入预设班牌数量', trigger: 'blur', type: 'number' }]

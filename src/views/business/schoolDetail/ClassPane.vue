@@ -65,7 +65,7 @@ export default {
   cruds() {
     return CRUD({
       title: '班级',
-      url: 'ljadmin/class/queryClass',
+      url: 'ljadmin/school/queryClass',
       crudMethod: { add: addClass, edit: updateClass, del: deleteClass }
     })
   },
@@ -80,10 +80,10 @@ export default {
       schoolGrades: [],
       classModes: CLASS_MODE,
       permission: {
-        add: ['admin', 'school:add'],
-        edit: ['admin', 'school:edit'],
-        del: ['admin', 'school:del'],
-        view: ['admin', 'school:view']
+        add: ['admin', 'school_class:add'],
+        edit: ['admin', 'school_class:edit'],
+        del: ['admin', 'school_class:del'],
+        view: ['admin', 'school_class:view']
       },
       rules: {
         mode: [{ required: true, message: '请选择班级性质', trigger: 'blur' }],
