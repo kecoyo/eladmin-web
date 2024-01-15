@@ -1,10 +1,11 @@
 {
   "name": "eladmin-web",
   "version": "2.7.0",
-  "description": "ELADMIN 前端源码",
+  "description": "LJADMIN 前端源码",
   "author": "Zheng Jie",
   "license": "Apache-2.0",
   "scripts": {
+    "start": "npm run dev",
     "dev": "vue-cli-service serve",
     "build:prod": "vue-cli-service build",
     "build:stage": "vue-cli-service build --mode staging",
@@ -13,17 +14,6 @@
     "test:unit": "jest --clearCache && vue-cli-service test:unit",
     "svgo": "svgo -f src/assets/icons/svg --config=src/assets/icons/svgo.yml",
     "new": "plop"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "src/**/*.{js,vue}": [
-      "eslint --fix",
-      "git add"
-    ]
   },
   "repository": {
     "type": "git",

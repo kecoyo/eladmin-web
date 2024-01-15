@@ -14,6 +14,12 @@
       <el-tab-pane label="学科管理" name="subject">
         <SubjectPane />
       </el-tab-pane>
+      <el-tab-pane label="学校管理员" name="schoolAdmin">
+        <SchoolAdminPane />
+      </el-tab-pane>
+      <el-tab-pane label="年级管理员" name="gradeAdmin">
+        <GradeAdminPane />
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -23,10 +29,12 @@ import InfoPane from './InfoPane'
 import TeacherPane from './TeacherPane'
 import ClassPane from './ClassPane'
 import SubjectPane from './SubjectPane'
+import GradeAdminPane from './GradeAdminPane'
+import SchoolAdminPane from './SchoolAdminPane'
 
 export default {
   name: 'SchoolDetail',
-  components: { InfoPane, TeacherPane, ClassPane, SubjectPane },
+  components: { InfoPane, TeacherPane, ClassPane, SubjectPane, GradeAdminPane, SchoolAdminPane },
   data() {
     return {
       activeTab: 'info',

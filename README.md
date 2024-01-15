@@ -1,6 +1,6 @@
-# ELADMIN-WEB
+# LJADMIN-WEB
 
-ELADMIN 前端源码
+LJADMIN 前端源码
 
 #### 项目源码
 

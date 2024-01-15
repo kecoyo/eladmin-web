@@ -95,17 +95,7 @@ export default {
       }
     }
   },
-  computed: {
-    allAreasMap() {
-      return this.$store.state.baseInfo.allAreasMap
-    }
-  },
   mounted() {
-    // this.crud.optShow.add = false
-    // this.crud.optShow.edit = false
-    // this.crud.optShow.del = false
-    // this.crud.optShow.download = false
-
     this.$eventBus.$on('schoolInfoChange', schoolInfo => {
       this.getSchoolGrades()
     })
@@ -148,6 +138,7 @@ export default {
     getSchoolGrades() {
       getSchoolGrades(this.schoolId).then(res => {
         this.schoolGrades = res
+        this.$eventBus.$emit('schoolGradesChange', res)
       })
     }
   }

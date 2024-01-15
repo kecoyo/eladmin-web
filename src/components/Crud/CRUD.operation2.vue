@@ -3,7 +3,7 @@
     <span class="crud-opts-left">
       <!--左侧插槽-->
       <el-button v-if="crud.optShow.add" v-permission="permission.add" class="filter-item" size="mini" type="primary" icon="el-icon-plus" @click="crud.toAdd">
-        新增
+        {{ crud.crudName.add }}
       </el-button>
       <el-button
         v-if="crud.optShow.edit"
@@ -15,7 +15,7 @@
         :disabled="crud.selections.length !== 1"
         @click="crud.toEdit(crud.selections[0])"
       >
-        修改
+        {{ crud.crudName.edit }}
       </el-button>
       <el-button
         v-if="crud.optShow.del"
@@ -29,10 +29,11 @@
         :disabled="crud.selections.length === 0"
         @click="toDelete(crud.selections)"
       >
-        删除
+        {{ crud.crudName.del }}
       </el-button>
       <el-button
         v-if="crud.optShow.download"
+        v-permission="permission.download"
         :loading="crud.downloadLoading"
         :disabled="!crud.data.length"
         class="filter-item"
@@ -41,7 +42,7 @@
         icon="el-icon-download"
         @click="crud.doExport"
       >
-        导出
+        {{ crud.crudName.download }}
       </el-button>
 
       <!--右侧-->

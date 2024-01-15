@@ -117,3 +117,41 @@ export function deleteClass(ids, delParams) {
     }
   })
 }
+
+export function addSchoolAdmin(data) {
+  return request({
+    url: 'ljadmin/school/addSchoolAdmin',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteSchoolAdmin(ids, delParams) {
+  return request({
+    url: 'ljadmin/school/deleteSchoolAdmin',
+    method: 'post',
+    data: {
+      ...delParams,
+      ids
+    }
+  })
+}
+
+export function addGradeAdmin(data) {
+  return request({
+    url: 'ljadmin/school/addGradeAdmin',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteGradeAdmin(ids, delParams) {
+  return request({
+    url: 'ljadmin/school/deleteGradeAdmin',
+    method: 'post',
+    data: {
+      ...delParams,
+      ids
+    }
+  })
+}
