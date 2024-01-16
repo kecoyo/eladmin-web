@@ -56,12 +56,6 @@ export default {
       crudMethod: {
         add: addGradeAdmin,
         del: deleteGradeAdmin
-      },
-      crudName: {
-        add: '添加',
-        edit: '编辑',
-        del: '删除',
-        download: '导出'
       }
     })
   },

@@ -68,7 +68,8 @@ service.interceptors.response.use(
           router.push({ path: '/401' })
         } else {
           const errorMsg = error.response.data.message
-          if (errorMsg !== undefined) {
+          const showError = error.config.showError
+          if (errorMsg !== undefined && showError !== false) {
             Notification.error({
               title: errorMsg,
               duration: 5000

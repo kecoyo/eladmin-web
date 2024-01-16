@@ -31,6 +31,9 @@
       >
         {{ crud.crudName.del }}
       </el-button>
+      <el-button v-permission="permission.upload" class="filter-item" size="mini" type="warning" icon="el-icon-upload2" @click="crud.toUpload">
+        {{ crud.crudName.upload }}
+      </el-button>
       <el-button
         v-if="crud.optShow.download"
         v-permission="permission.download"

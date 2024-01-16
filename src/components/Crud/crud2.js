@@ -1,5 +1,6 @@
 import { initData, download } from '@/api/data'
 import { parseTime, downloadFile } from '@/utils/index'
+import _ from 'lodash'
 import Vue from 'vue'
 
 /**
@@ -47,12 +48,13 @@ function CRUD(options) {
     },
     // CRUD Name
     crudName: {
-      add: '新增',
+      add: '添加',
       del: '删除',
       edit: '编辑',
-      download: '导出',
       get: '获取',
-      view: '查看'
+      view: '查看',
+      upload: '导入',
+      download: '导出'
     },
     // 主页操作栏显示哪些按钮
     optShow: {
@@ -201,8 +203,15 @@ function CRUD(options) {
       if (!callVmHook(crud, CRUD.HOOK.beforeToView, data)) {
         return
       }
-      // this.$router.push({ path: crud.url + '/view/' + crud.getDataId(data) })
-      callVmHook(crud, CRUD.HOOK.afterToView, data)
+    },
+    /**
+     * 启动上传
+     * @param {*} data 数据项
+     */
+    toUpload() {
+      if (!callVmHook(crud, CRUD.HOOK.beforeToUpload, data)) {
+        return
+      }
     },
     /**
      * 启动删除
@@ -664,7 +673,11 @@ function mergeOptions(src, opts) {
   }
   for (const key in src) {
     if (opts.hasOwnProperty(key)) {
-      optsRet[key] = opts[key]
+      if (typeof optsRet[key] === 'object') {
+        optsRet[key] = _.merge(optsRet[key], opts[key])
+      } else {
+        optsRet[key] = opts[key]
+      }
     }
   }
   return optsRet
@@ -849,8 +862,6 @@ CRUD.HOOK = {
   afterDeleteCancel: 'afterCrudDeleteCancel',
   /** 查看 - 之前 */
   beforeToView: 'beforeCrudToView',
-  /** 查看 - 之后 */
-  afterToView: 'afterCrudToView',
   /** 新建 - 之前 */
   beforeToAdd: 'beforeCrudToAdd',
   /** 新建 - 之后 */
@@ -880,7 +891,9 @@ CRUD.HOOK = {
   /** 提交 - 之后 */
   afterSubmit: 'afterCrudSubmitCU',
   afterAddError: 'afterCrudAddError',
-  afterEditError: 'afterCrudEditError'
+  afterEditError: 'afterCrudEditError',
+  /** 上传 - 之前 */
+  beforeToUpload: 'beforeToUpload'
 }
 
 /**

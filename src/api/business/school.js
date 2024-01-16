@@ -155,3 +155,12 @@ export function deleteGradeAdmin(ids, delParams) {
     }
   })
 }
+
+export function importTeacher(data) {
+  return request({
+    url: 'ljadmin/school/importTeacher',
+    method: 'post',
+    data,
+    showError: false
+  })
+}

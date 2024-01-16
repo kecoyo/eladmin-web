@@ -59,16 +59,72 @@
     </el-table>
     <!--分页组件-->
     <pagination />
+    <!--上传表单组件-->
+    <el-dialog append-to-body :close-on-click-modal="false" :before-close="cancelUpload" :visible="uploadStatus > 0" :title="uploadTitle" width="1000px">
+      <!-- <el-form ref="uploadForm" :model="uploadForm" size="small" label-width="100px">
+       <el-form-item label="第一步:">
+          <div>请先下载批量导入模板</div>
+          <el-button type="primary" size="small">下载模板</el-button>
+        </el-form-item>
+        <el-form-item label="第二步:">
+          <div>上传已填写好的表格</div>
+          <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/">
+            <el-button size="small" type="primary">点击上传</el-button>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="第三步:">
+          <div>导入名单后，请检查无错后，再确认创建。</div>
+          <el-button type="primary" size="small">确认创建</el-button>
+        </el-form-item>
+      </el-form> -->
+
+      <div class="upload-head">
+        <div class="upload-left">
+          <el-upload class="upload-item" action="" :show-file-list="false" :auto-upload="false" :on-change="handleUploadChange">
+            <el-button size="small" type="primary">点击上传</el-button>
+          </el-upload>
+          <el-button class="upload-item" type="success" size="small" @click="submitUpload">开始导入</el-button>
+        </div>
+
+        <div class="upload-right">
+          <el-button class="upload-item" type="info" size="small">下载模板</el-button>
+        </div>
+      </div>
+
+      <el-card class="box-card">
+        <el-table ref="table22" :data="tableData" height="450" style="width: 100%">
+          <el-table-column type="index" width="50" />
+          <el-table-column prop="老师姓名" label="老师姓名" />
+          <el-table-column prop="手机号" label="手机号" />
+          <el-table-column prop="性别" label="性别" />
+          <el-table-column prop="身份证号" label="身份证号" />
+          <el-table-column label="导入状态">
+            <template slot-scope="scope">
+              <el-tag v-if="scope.row.status === 0">等待导入</el-tag>
+              <el-tag v-else-if="scope.row.status === 1" type="info">正在导入</el-tag>
+              <el-tag v-else-if="scope.row.status === 2" type="success">导入成功</el-tag>
+              <el-tag v-else-if="scope.row.status === 3" type="danger">{{ scope.row.errorMsg }}</el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button type="text" @click="cancelUpload">取消</el-button>
+        <el-button :loading="uploadStatus === 2" type="primary" @click="cancelUpload">确认</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { addTeacher, updateTeacher, deleteTeacher } from '@/api/business/school'
+import { addTeacher, updateTeacher, deleteTeacher, importTeacher } from '@/api/business/school'
 import CRUD, { presenter, header, form, crud } from '@crud/crud2'
 import rrOperation from '@crud/RR.operation2'
 import crudOperation from '@crud/CRUD.operation2'
 import udOperation from '@crud/UD.operation2'
 import pagination from '@crud/Pagination'
+import readXlsxFile from 'read-excel-file'
 
 const defaultForm = { id: null, name: null, gender: 1, idCard: null, phone: null }
 export default {
@@ -95,20 +151,18 @@ export default {
         add: ['admin', 'school_teacher:add'],
         edit: ['admin', 'school_teacher:edit'],
         del: ['admin', 'school_teacher:del'],
-        view: ['admin', 'school_teacher:view']
+        view: ['admin', 'school_teacher:view'],
+        upload: ['admin', 'school_teacher:upload']
       },
       rules: {
         name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
-      }
+      },
+      uploadForm: {},
+      uploadTitle: '导入教师',
+      uploadStatus: 0,
+      tableData: []
     }
-  },
-  computed: {},
-  mounted() {
-    // this.crud.optShow.add = false
-    // this.crud.optShow.edit = false
-    // this.crud.optShow.del = false
-    // this.crud.optShow.download = false
   },
   methods: {
     [CRUD.HOOK.beforeRefresh](curd) {
@@ -135,9 +189,72 @@ export default {
         path: '/business/teacher/' + data.id,
         query: { title: data.name }
       })
+    },
+    // 查看前做的操作
+    [CRUD.HOOK.beforeToUpload](crud, data) {
+      this.uploadStatus = CRUD.STATUS.PREPARED
+    },
+    handleUploadChange(file, fileList) {
+      console.log(file, fileList)
+      readXlsxFile(file.raw, { sheet: 1 }).then(data => {
+        const [columns, ...rows] = data.slice(1)
+        console.log(columns)
+        console.log(rows)
+        this.tableData = rows.map(row => {
+          return columns.reduce(
+            (acc, col, i) => {
+              acc[col] = row[i]
+              return acc
+            },
+            { status: 0 }
+          )
+        })
+      })
+    },
+    cancelUpload() {
+      this.uploadStatus = CRUD.STATUS.NORMAL
+    },
+    async submitUpload() {
+      for (let i = 0; i < this.tableData.length; i++) {
+        const row = this.tableData[i]
+        row.status = 1
+        this.$set(this.tableData, i, { ...row })
+        try {
+          await importTeacher({})
+          row.status = 2
+        } catch (error) {
+          row.status = 3
+          row.errorMsg = error.response.data.message
+        }
+        this.$set(this.tableData, i, { ...row })
+      }
     }
   }
 }
 </script>
 
-<style rel="stylesheet/scss" lang="scss" scoped></style>
+<style rel="stylesheet/scss" lang="scss" scoped>
+.upload-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .upload-left {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .upload-right {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .upload-item {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 10px 10px 0;
+  }
+}
+</style>
